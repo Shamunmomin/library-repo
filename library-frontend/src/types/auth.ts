@@ -15,6 +15,7 @@ export interface AuthResponse {
   username: string;
   role: Role;
   libraryId: string | null;
+  isSubscribed: boolean;
 }
 
 export interface LoginRequest {

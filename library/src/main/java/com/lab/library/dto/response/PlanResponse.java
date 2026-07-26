@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 @Builder
 public class PlanResponse {
 
-    private Long id;
+    private UUID id;
     private PlanType planType;
     private String name;
     private BigDecimal price;

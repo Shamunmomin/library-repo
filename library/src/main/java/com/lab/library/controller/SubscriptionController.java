@@ -1,6 +1,7 @@
 package com.lab.library.controller;
 
 import com.lab.library.dto.response.ApiResponse;
+import com.lab.library.dto.response.PaymentRequestResponse;
 import com.lab.library.dto.response.PlanResponse;
 import com.lab.library.dto.response.SubscriptionStatusResponse;
 import com.lab.library.entity.User;
@@ -45,7 +46,7 @@ public class SubscriptionController {
     @PostMapping("/purchase")
     public ResponseEntity<ApiResponse<Void>> submitPayment(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("planId") @NotNull Long planId,
+            @RequestParam("planId") @NotNull UUID planId,
             @RequestParam("screenshot") MultipartFile screenshot) {
 
         User user = userRepository.findByEmail(userDetails.getUsername())
@@ -60,5 +61,16 @@ public class SubscriptionController {
     public ResponseEntity<ApiResponse<String>> getAdminPhone() {
         String phone = subscriptionService.getAdminPhone();
         return ResponseEntity.ok(ApiResponse.success("Admin phone retrieved", phone));
+    }
+
+    @GetMapping("/payments")
+    public ResponseEntity<ApiResponse<List<PaymentRequestResponse>>> getPaymentHistory(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new com.lab.library.exception.ResourceNotFoundException("User not found"));
+
+        List<PaymentRequestResponse> payments = subscriptionService.getPaymentHistory(user.getId());
+        return ResponseEntity.ok(ApiResponse.success("Payment history retrieved", payments));
     }
 }

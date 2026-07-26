@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.lab.library.dto.response.PaymentRequestResponse;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,7 +82,7 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public void submitPayment(UUID userId, Long planId, MultipartFile screenshot) {
+    public void submitPayment(UUID userId, UUID planId, MultipartFile screenshot) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -123,6 +125,34 @@ public class SubscriptionService {
 
     public String getAdminPhone() {
         return adminPhone;
+    }
+
+    public List<PaymentRequestResponse> getPaymentHistory(UUID userId) {
+        return paymentRequestRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(pr -> {
+                    String userName = userRepository.findById(pr.getUserId())
+                            .map(User::getName).orElse("Unknown");
+                    String libraryName = libraryRepository.findById(pr.getLibraryId())
+                            .map(Library::getName).orElse("Unknown");
+
+                    return PaymentRequestResponse.builder()
+                            .id(pr.getId())
+                            .libraryId(pr.getLibraryId())
+                            .userId(pr.getUserId())
+                            .userName(userName)
+                            .libraryName(libraryName)
+                            .planType(pr.getPlan().getPlanType())
+                            .planName(pr.getPlan().getName())
+                            .amount(pr.getAmount())
+                            .screenshotPath(pr.getScreenshotPath())
+                            .status(pr.getStatus())
+                            .adminNotes(pr.getAdminNotes())
+                            .createdAt(pr.getCreatedAt())
+                            .processedAt(pr.getProcessedAt())
+                            .build();
+                })
+                .toList();
     }
 
     private String saveScreenshot(MultipartFile file, UUID userId) {
