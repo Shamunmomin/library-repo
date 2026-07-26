@@ -19,7 +19,7 @@ const registerSchema = z.object({
 
 export function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, getDashboardPath } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -34,7 +34,7 @@ export function Register() {
     setIsSubmitting(true);
     try {
       await registerUser(data);
-      navigate('/dashboard', { replace: true });
+      navigate(getDashboardPath(), { replace: true });
     } catch {
       // Error handled by axios interceptor
     } finally {

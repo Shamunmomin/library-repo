@@ -13,7 +13,7 @@ const loginSchema = z.object({
 
 export function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, getDashboardPath } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -28,7 +28,7 @@ export function Login() {
     setIsSubmitting(true);
     try {
       await login(data);
-      navigate('/dashboard', { replace: true });
+      navigate(getDashboardPath(), { replace: true });
     } catch {
       // Error handled by axios interceptor
     } finally {

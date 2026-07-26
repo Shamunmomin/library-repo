@@ -23,7 +23,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    const fallbackPath = user.role === 'SUPER_ADMIN' ? '/admin/dashboard' : '/dashboard';
+    return <Navigate to={fallbackPath} replace />;
   }
 
   return <>{children}</>;

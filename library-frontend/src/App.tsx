@@ -5,37 +5,23 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { GuestRoute } from './components/GuestRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { OwnerDashboard } from './pages/owner/OwnerDashboard';
 import { useAuth } from './hooks/useAuth';
+import { Role } from './types/auth';
 
-function Dashboard() {
-  const { user, logout } = useAuth();
+function RootRedirect() {
+  const { isAuthenticated, isLoading, getDashboardPath } = useAuth();
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">Library Management</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.name}</span>
-              <button
-                onClick={logout}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-        <p className="mt-2 text-gray-600">Welcome to the Library Management System</p>
-      </main>
-    </div>
-  );
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return <Navigate to={isAuthenticated ? getDashboardPath() : '/login'} replace />;
 }
 
 function App() {
@@ -61,15 +47,23 @@ function App() {
             }
           />
           <Route
-            path="/dashboard"
+            path="/admin/dashboard"
             element={
-              <ProtectedRoute>
-                <Dashboard />
+              <ProtectedRoute allowedRoles={[Role.SUPER_ADMIN]}>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={[Role.LIBRARY_OWNER]}>
+                <OwnerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
