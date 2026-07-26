@@ -1,7 +1,9 @@
-export enum Role {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  LIBRARY_OWNER = 'LIBRARY_OWNER',
-}
+export const Role = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  LIBRARY_OWNER: 'LIBRARY_OWNER',
+} as const;
+
+export type Role = typeof Role[keyof typeof Role];
 
 export interface AuthResponse {
   accessToken: string;
