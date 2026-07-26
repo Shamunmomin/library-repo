@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { subscriptionApi } from '../../api/subscription';
 import type { SubscriptionPlan } from '../../types/subscription';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { UpiQrCode } from './UpiQrCode';
 import { useTheme } from '../../hooks/useTheme';
 
 export function SubscriptionPlans() {
@@ -14,16 +15,19 @@ export function SubscriptionPlans() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adminPhone, setAdminPhone] = useState('');
+  const [upiId, setUpiId] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [plansRes, phoneRes] = await Promise.all([
+        const [plansRes, phoneRes, upiRes] = await Promise.all([
           subscriptionApi.getPlans(),
           subscriptionApi.getAdminPhone(),
+          subscriptionApi.getAdminUpiId(),
         ]);
         setPlans(plansRes.data);
         setAdminPhone(phoneRes.data);
+        setUpiId(upiRes.data);
       } catch {
         toast.error('Failed to load plans');
       } finally {
@@ -94,14 +98,30 @@ export function SubscriptionPlans() {
         ))}
       </div>
 
-      {/* Upload Section */}
+      {/* Payment Section */}
       {selectedPlan && (
         <div className={`${colors.card.bg} ${colors.card.shadow} rounded-lg p-5 border ${colors.border.primary}`}>
-          <h4 className={`font-medium ${colors.text.primary} mb-3`}>Upload Payment Screenshot</h4>
+          <h4 className={`font-medium ${colors.text.primary} mb-4`}>Make Payment</h4>
+
+          {/* UPI QR Code */}
+          {upiId && (
+            <div className="flex flex-col items-center mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className={`text-sm ${colors.text.secondary} mb-3`}>
+                Scan QR code to pay <span className="font-semibold">₹{selectedPlan.price}</span> for <span className="font-semibold">{selectedPlan.name}</span>
+              </p>
+              <UpiQrCode
+                upiId={upiId}
+                amount={Number(selectedPlan.price)}
+                name="Library Management"
+              />
+            </div>
+          )}
+
+          {/* Upload Screenshot */}
           <div className="space-y-4">
             <div>
               <label className={`block text-sm ${colors.text.secondary} mb-2`}>
-                Take a screenshot of your payment and upload it here
+                After payment, take a screenshot and upload it here
               </label>
               <div className={`flex items-center gap-3 p-3 border-2 border-dashed ${colors.border.primary} rounded-lg`}>
                 <Upload size={20} className={colors.text.tertiary} />

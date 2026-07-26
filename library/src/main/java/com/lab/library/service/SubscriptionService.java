@@ -40,6 +40,9 @@ public class SubscriptionService {
     @Value("${app.admin.phone:+91-XXXXXXXXXX}")
     private String adminPhone;
 
+    @Value("${app.admin.upi-id:}")
+    private String adminUpiId;
+
     public List<PlanResponse> getActivePlans() {
         return planRepository.findByActiveTrue().stream()
                 .map(this::mapToPlanResponse)
@@ -125,6 +128,10 @@ public class SubscriptionService {
 
     public String getAdminPhone() {
         return adminPhone;
+    }
+
+    public String getAdminUpiId() {
+        return adminUpiId;
     }
 
     public List<PaymentRequestResponse> getPaymentHistory(UUID userId) {

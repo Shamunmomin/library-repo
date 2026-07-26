@@ -32,4 +32,9 @@ export const subscriptionApi = {
     const response = await api.get<ApiResponse<string>>('/owner/subscription/admin-phone');
     return response.data;
   },
+
+  getAdminUpiId: async (): Promise<ApiResponse<string>> => {
+    const response = await api.get<ApiResponse<string>>('/owner/subscription/upi-id');
+    return response.data;
+  },
 };

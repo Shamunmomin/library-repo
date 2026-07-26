@@ -63,6 +63,12 @@ public class SubscriptionController {
         return ResponseEntity.ok(ApiResponse.success("Admin phone retrieved", phone));
     }
 
+    @GetMapping("/upi-id")
+    public ResponseEntity<ApiResponse<String>> getAdminUpiId() {
+        String upiId = subscriptionService.getAdminUpiId();
+        return ResponseEntity.ok(ApiResponse.success("UPI ID retrieved", upiId));
+    }
+
     @GetMapping("/payments")
     public ResponseEntity<ApiResponse<List<PaymentRequestResponse>>> getPaymentHistory(
             @AuthenticationPrincipal UserDetails userDetails) {
