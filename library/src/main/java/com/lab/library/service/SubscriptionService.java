@@ -1,0 +1,156 @@
+package com.lab.library.service;
+
+import com.lab.library.dto.response.PlanResponse;
+import com.lab.library.dto.response.SubscriptionStatusResponse;
+import com.lab.library.entity.*;
+import com.lab.library.exception.BadRequestException;
+import com.lab.library.exception.ResourceNotFoundException;
+import com.lab.library.repository.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class SubscriptionService {
+
+    private final SubscriptionPlanRepository planRepository;
+    private final LibraryRepository libraryRepository;
+    private final LibrarySubscriptionRepository subscriptionRepository;
+    private final PaymentRequestRepository paymentRequestRepository;
+    private final UserRepository userRepository;
+
+    @Value("${file.upload.payments:uploads/payments/}")
+    private String uploadDir;
+
+    @Value("${app.admin.phone:+91-XXXXXXXXXX}")
+    private String adminPhone;
+
+    public List<PlanResponse> getActivePlans() {
+        return planRepository.findByActiveTrue().stream()
+                .map(this::mapToPlanResponse)
+                .toList();
+    }
+
+    public SubscriptionStatusResponse getSubscriptionStatus(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Library library = libraryRepository.findByOwnerId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Library not found for this user"));
+
+        boolean hasPendingPayment = paymentRequestRepository
+                .existsByUserIdAndStatus(userId, PaymentStatus.PENDING);
+
+        var activeSubscription = subscriptionRepository
+                .findByLibraryIdAndStatus(library.getId(), SubscriptionStatus.ACTIVE);
+
+        if (activeSubscription.isPresent()) {
+            LibrarySubscription sub = activeSubscription.get();
+            return SubscriptionStatusResponse.builder()
+                    .subscribed(true)
+                    .status(sub.getStatus())
+                    .planName(sub.getPlan().getName())
+                    .startDate(sub.getStartDate())
+                    .endDate(sub.getEndDate())
+                    .pendingPayment(false)
+                    .build();
+        }
+
+        return SubscriptionStatusResponse.builder()
+                .subscribed(false)
+                .status(null)
+                .planName(null)
+                .startDate(null)
+                .endDate(null)
+                .pendingPayment(hasPendingPayment)
+                .build();
+    }
+
+    @Transactional
+    public void submitPayment(UUID userId, Long planId, MultipartFile screenshot) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Library library = libraryRepository.findByOwnerId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Library not found. Please create a library first."));
+
+        SubscriptionPlan plan = planRepository.findById(planId)
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
+
+        if (!plan.isActive()) {
+            throw new BadRequestException("Selected plan is no longer active");
+        }
+
+        boolean hasPending = paymentRequestRepository
+                .existsByUserIdAndStatus(userId, PaymentStatus.PENDING);
+        if (hasPending) {
+            throw new BadRequestException("You already have a pending payment request. Please wait for admin approval.");
+        }
+
+        boolean hasActive = subscriptionRepository
+                .findByLibraryIdAndStatus(library.getId(), SubscriptionStatus.ACTIVE).isPresent();
+        if (hasActive) {
+            throw new BadRequestException("You already have an active subscription.");
+        }
+
+        String screenshotPath = saveScreenshot(screenshot, userId);
+
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+                .libraryId(library.getId())
+                .userId(userId)
+                .plan(plan)
+                .amount(plan.getPrice())
+                .screenshotPath(screenshotPath)
+                .status(PaymentStatus.PENDING)
+                .build();
+
+        paymentRequestRepository.save(paymentRequest);
+        log.info("Payment request created for user: {}, plan: {}", user.getEmail(), plan.getName());
+    }
+
+    public String getAdminPhone() {
+        return adminPhone;
+    }
+
+    private String saveScreenshot(MultipartFile file, UUID userId) {
+        try {
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
+
+            String fileName = userId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = uploadPath.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath);
+
+            return uploadDir + fileName;
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to upload screenshot: " + e.getMessage());
+        }
+    }
+
+    private PlanResponse mapToPlanResponse(SubscriptionPlan plan) {
+        return PlanResponse.builder()
+                .id(plan.getId())
+                .planType(plan.getPlanType())
+                .name(plan.getName())
+                .price(plan.getPrice())
+                .maxFloors(plan.getMaxFloors())
+                .maxSeats(plan.getMaxSeats())
+                .maxMembers(plan.getMaxMembers())
+                .description(plan.getDescription())
+                .durationDays(plan.getDurationDays())
+                .build();
+    }
+}

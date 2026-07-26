@@ -23,4 +23,5 @@ public class AuthResponse {
     private String username;
     private Role role;
     private UUID libraryId;
+    private boolean isSubscribed;
 }

@@ -3,11 +3,12 @@ package com.lab.library.service;
 import com.lab.library.dto.request.LoginRequest;
 import com.lab.library.dto.request.RegisterRequest;
 import com.lab.library.dto.response.AuthResponse;
-import com.lab.library.entity.Role;
-import com.lab.library.entity.User;
+import com.lab.library.entity.*;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.DuplicateResourceException;
 import com.lab.library.exception.ResourceNotFoundException;
+import com.lab.library.repository.LibraryRepository;
+import com.lab.library.repository.LibrarySubscriptionRepository;
 import com.lab.library.repository.UserRepository;
 import com.lab.library.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -27,6 +30,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final LibraryRepository libraryRepository;
+    private final LibrarySubscriptionRepository subscriptionRepository;
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -51,6 +56,7 @@ public class AuthService {
                 .username(user.getUsername())
                 .role(user.getRole())
                 .libraryId(user.getLibraryId())
+                .isSubscribed(checkSubscription(user))
                 .build();
     }
 
@@ -90,6 +96,7 @@ public class AuthService {
                 .username(user.getUsername())
                 .role(user.getRole())
                 .libraryId(user.getLibraryId())
+                .isSubscribed(false)
                 .build();
     }
 
@@ -114,6 +121,7 @@ public class AuthService {
                 .username(user.getUsername())
                 .role(user.getRole())
                 .libraryId(user.getLibraryId())
+                .isSubscribed(checkSubscription(user))
                 .build();
     }
 
@@ -131,6 +139,18 @@ public class AuthService {
                 .username(user.getUsername())
                 .role(user.getRole())
                 .libraryId(user.getLibraryId())
+                .isSubscribed(checkSubscription(user))
                 .build();
+    }
+
+    private boolean checkSubscription(User user) {
+        if (user.getRole() == Role.SUPER_ADMIN) {
+            return true;
+        }
+
+        return libraryRepository.findByOwnerId(user.getId())
+                .flatMap(library -> subscriptionRepository.findByLibraryIdAndStatus(
+                        library.getId(), SubscriptionStatus.ACTIVE))
+                .isPresent();
     }
 }

@@ -1,0 +1,16 @@
+package com.lab.library.repository;
+
+import com.lab.library.entity.Library;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface LibraryRepository extends JpaRepository<Library, UUID> {
+
+    Optional<Library> findByOwnerId(UUID ownerId);
+
+    boolean existsByOwnerId(UUID ownerId);
+}
