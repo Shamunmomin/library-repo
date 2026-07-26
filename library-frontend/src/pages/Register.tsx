@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import { Role, type RegisterRequest } from '../types/auth';
 
 const registerSchema = z.object({
@@ -20,6 +21,7 @@ const registerSchema = z.object({
 export function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register: registerUser, getDashboardPath } = useAuth();
+  const { colors } = useTheme();
   const navigate = useNavigate();
 
   const {
@@ -43,27 +45,27 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen flex items-center justify-center ${colors.bg.secondary} py-12 px-4 sm:px-6 lg:px-8`}>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900">
+          <h1 className={`text-center text-3xl font-bold ${colors.text.primary}`}>
             Library Management
           </h1>
-          <h2 className="mt-2 text-center text-sm text-gray-600">
+          <h2 className={`mt-2 text-center text-sm ${colors.text.secondary}`}>
             Create your account
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Full Name
               </label>
               <input
                 {...register('name')}
                 type="text"
                 id="name"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm ${colors.input.placeholder} focus:outline-none ${colors.input.focus}`}
                 placeholder="Enter your full name"
               />
               {errors.name && (
@@ -71,14 +73,14 @@ export function Register() {
               )}
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Email address
               </label>
               <input
                 {...register('email')}
                 type="email"
                 id="email"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm ${colors.input.placeholder} focus:outline-none ${colors.input.focus}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -86,14 +88,14 @@ export function Register() {
               )}
             </div>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="username" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Username
               </label>
               <input
                 {...register('username')}
                 type="text"
                 id="username"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm ${colors.input.placeholder} focus:outline-none ${colors.input.focus}`}
                 placeholder="Choose a username"
               />
               {errors.username && (
@@ -101,14 +103,14 @@ export function Register() {
               )}
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Password
               </label>
               <input
                 {...register('password')}
                 type="password"
                 id="password"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm ${colors.input.placeholder} focus:outline-none ${colors.input.focus}`}
                 placeholder="Create a password"
               />
               {errors.password && (
@@ -116,13 +118,13 @@ export function Register() {
               )}
             </div>
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="role" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Account Type
               </label>
               <select
                 {...register('role')}
                 id="role"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm focus:outline-none ${colors.input.focus}`}
               >
                 <option value={Role.LIBRARY_OWNER}>Library Owner</option>
               </select>
@@ -140,7 +142,7 @@ export function Register() {
             {isSubmitting ? 'Creating account...' : 'Create account'}
           </button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className={`text-center text-sm ${colors.text.secondary}`}>
             Already have an account?{' '}
             <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
               Sign in

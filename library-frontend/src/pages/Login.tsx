@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import type { LoginRequest } from '../types/auth';
 
 const loginSchema = z.object({
@@ -14,6 +15,7 @@ const loginSchema = z.object({
 export function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, getDashboardPath } = useAuth();
+  const { colors } = useTheme();
   const navigate = useNavigate();
 
   const {
@@ -37,27 +39,27 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen flex items-center justify-center ${colors.bg.secondary} py-12 px-4 sm:px-6 lg:px-8`}>
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center text-3xl font-bold text-gray-900">
+          <h1 className={`text-center text-3xl font-bold ${colors.text.primary}`}>
             Library Management
           </h1>
-          <h2 className="mt-2 text-center text-sm text-gray-600">
+          <h2 className={`mt-2 text-center text-sm ${colors.text.secondary}`}>
             Sign in to your account
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Email address
               </label>
               <input
                 {...register('email')}
                 type="email"
                 id="email"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm ${colors.input.placeholder} focus:outline-none ${colors.input.focus}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -65,14 +67,14 @@ export function Login() {
               )}
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={`block text-sm font-medium ${colors.text.primary}`}>
                 Password
               </label>
               <input
                 {...register('password')}
                 type="password"
                 id="password"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border ${colors.input.border} ${colors.input.bg} ${colors.text.primary} rounded-md shadow-sm ${colors.input.placeholder} focus:outline-none ${colors.input.focus}`}
                 placeholder="Enter your password"
               />
               {errors.password && (
@@ -89,7 +91,7 @@ export function Login() {
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className={`text-center text-sm ${colors.text.secondary}`}>
             Don't have an account?{' '}
             <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
               Register here
