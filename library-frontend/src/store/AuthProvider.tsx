@@ -44,8 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.clear();
     setUser(null);
     toast.success('Logged out successfully');
   };

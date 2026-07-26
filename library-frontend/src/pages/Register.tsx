@@ -34,7 +34,7 @@ export function Register() {
     setIsSubmitting(true);
     try {
       await registerUser(data);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch {
       // Error handled by axios interceptor
     } finally {

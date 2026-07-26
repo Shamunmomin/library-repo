@@ -28,7 +28,7 @@ export function Login() {
     setIsSubmitting(true);
     try {
       await login(data);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch {
       // Error handled by axios interceptor
     } finally {
