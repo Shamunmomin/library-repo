@@ -17,9 +17,7 @@ export const subscriptionApi = {
     formData.append('planId', planId);
     formData.append('screenshot', screenshot);
 
-    const response = await api.post<ApiResponse<void>>('/owner/subscription/purchase', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post<ApiResponse<void>>('/owner/subscription/purchase', formData);
     return response.data;
   },
 

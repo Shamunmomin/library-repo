@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MultipartException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -74,6 +75,22 @@ public class GlobalExceptionHandler {
                 "You don't have permission to access this resource"
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResponse> handleMultipart(MultipartException ex) {
+        String message = ex.getMessage();
+        if (message != null && message.toLowerCase().contains("size")) {
+            message = "File is too large. Maximum allowed size is 5 MB.";
+        } else {
+            message = "Failed to upload file. Please try again.";
+        }
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                "File Too Large",
+                message
+        );
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

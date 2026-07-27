@@ -15,11 +15,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.lab.library.dto.response.PaymentRequestResponse;
 
+import jakarta.annotation.PostConstruct;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +53,17 @@ public class SubscriptionService {
 
     @Value("${app.admin.upi-id}")
     private String adminUpiId;
+
+    @PostConstruct
+    public void init() {
+        try {
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
+            log.info("Upload directory created/verified: {}", uploadPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create upload directory: " + uploadDir, e);
+        }
+    }
 
     public List<PlanResponse> getActivePlans() {
         return planRepository.findByActiveTrue().stream()
@@ -185,11 +207,36 @@ public class SubscriptionService {
     private String saveScreenshot(MultipartFile file, UUID userId) {
         try {
             Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(uploadPath);
 
-            String fileName = userId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            String fileName = userId + "_" + System.currentTimeMillis() + ".jpg";
             Path filePath = uploadPath.resolve(fileName);
-            Files.copy(file.getInputStream(), filePath);
+
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(file.getBytes()));
+            if (image == null) {
+                throw new BadRequestException("Invalid image file. Please upload a valid screenshot.");
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+            if (!writers.hasNext()) {
+                throw new BadRequestException("Image processing not supported on this server.");
+            }
+
+            ImageWriter writer = writers.next();
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionQuality(0.7f);
+
+            try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+                writer.setOutput(ios);
+                writer.write(null, new IIOImage(image, null, null), param);
+            }
+            writer.dispose();
+
+            Files.write(filePath, baos.toByteArray());
+
+            log.info("Screenshot saved: {} (original: {} bytes, compressed: {} bytes)",
+                    fileName, file.getSize(), baos.size());
 
             return uploadDir + fileName;
         } catch (IOException e) {

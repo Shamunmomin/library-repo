@@ -37,9 +37,16 @@ export function SubscriptionPlans() {
     fetchData();
   }, []);
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
   const handleSubmit = async () => {
     if (!selectedPlan || !screenshot) {
       toast.error('Please select a plan and upload payment screenshot');
+      return;
+    }
+
+    if (screenshot.size > MAX_FILE_SIZE) {
+      toast.error('File is too large. Maximum allowed size is 5 MB.');
       return;
     }
 
@@ -49,8 +56,9 @@ export function SubscriptionPlans() {
       toast.success('Payment submitted! Waiting for admin approval.');
       setSelectedPlan(null);
       setScreenshot(null);
-    } catch {
-      // Error handled by interceptor
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Failed to submit payment. Please try again.';
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
