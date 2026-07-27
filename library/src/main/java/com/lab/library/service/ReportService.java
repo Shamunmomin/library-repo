@@ -33,6 +33,7 @@ public class ReportService {
     private final SeatRepository seatRepository;
     private final SeatAllocationRepository seatAllocationRepository;
     private final FloorRepository floorRepository;
+    private final PaymentRepository paymentRepository;
 
     public byte[] generatePaymentReport(UUID userId, LocalDate startDate, LocalDate endDate) {
         checkProAccess(userId);
@@ -146,6 +147,59 @@ public class ReportService {
         }
 
         log.info("Utilization report generated for user: {}", user.getEmail());
+        return baos.toByteArray();
+    }
+
+    public byte[] generateAdminPaymentReport(LocalDate startDate, LocalDate endDate) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4);
+        try {
+            PdfWriter.getInstance(document, baos);
+            document.open();
+
+            Paragraph titlePara = new Paragraph("Platform Payment Report", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18));
+            titlePara.setAlignment(Element.ALIGN_CENTER);
+            document.add(titlePara);
+
+            Paragraph datePara = new Paragraph("Period: " + startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " to " + endDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    FontFactory.getFont(FontFactory.HELVETICA, 10));
+            datePara.setAlignment(Element.ALIGN_CENTER);
+            document.add(datePara);
+            document.add(new Paragraph(" "));
+
+            List<Payment> payments = paymentRepository.findAllByOrderByCreatedAtDesc();
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            addTableHeader(table, "User ID", "Amount", "Method", "Transaction ID", "Status", "Date");
+
+            for (Payment p : payments) {
+                addTableCell(table,
+                        p.getUser() != null ? p.getUser().getEmail() : "-",
+                        p.getAmount() != null ? "Rs." + p.getAmount().toString() : "Rs.0",
+                        p.getPaymentMethod() != null ? p.getPaymentMethod() : "-",
+                        p.getTransactionId() != null ? p.getTransactionId() : "-",
+                        p.getStatus().name(),
+                        p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString() : "-");
+            }
+
+            document.add(table);
+
+            BigDecimal total = payments.stream()
+                    .filter(p -> p.getStatus() == com.lab.library.enums.PaymentStatus.COMPLETED && p.getAmount() != null)
+                    .map(Payment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            Paragraph summary = new Paragraph();
+            summary.add(new Chunk("\nTotal Completed Payments: Rs." + total.toString(), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
+            document.add(summary);
+
+            document.close();
+        } catch (Exception e) {
+            log.error("Error generating admin payment report", e);
+            throw new RuntimeException("Failed to generate admin payment report", e);
+        }
+
+        log.info("Admin payment report generated");
         return baos.toByteArray();
     }
 

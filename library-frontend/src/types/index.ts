@@ -141,6 +141,24 @@ export interface AdminDashboardStats {
   pendingRequests: number
 }
 
+export interface LibraryDetail {
+  id: string
+  userId: string
+  ownerName: string
+  ownerEmail: string
+  ownerPhone: string
+  name: string
+  address: string
+  phone: string
+  icon: string
+  subscriptionPackage: string
+  subscriptionStatus: string
+  floorCount: number
+  totalSeats: number
+  occupiedSeats: number
+  createdAt: string
+}
+
 export interface ApiError {
   status: number
   message: string
