@@ -1,5 +1,6 @@
 import api from '../lib/axios';
-import type { SubscriptionPlan, SubscriptionStatus, PaymentRequest, ApiResponse } from '../types/subscription';
+import type { SubscriptionPlan, SubscriptionStatus, PaymentRequest } from '../types/subscription';
+import type { ApiResponse } from '../types/api';
 
 export const subscriptionApi = {
   getPlans: async (): Promise<ApiResponse<SubscriptionPlan[]>> => {

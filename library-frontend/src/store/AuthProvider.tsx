@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { AuthContext } from './AuthContext';
-import { authApi } from '../api/auth';
+import { authApi } from '../services/authService';
 import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/auth';
 import { Role } from '../types/auth';
 import toast from 'react-hot-toast';

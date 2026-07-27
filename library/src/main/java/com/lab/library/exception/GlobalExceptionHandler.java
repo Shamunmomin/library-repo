@@ -1,6 +1,8 @@
 package com.lab.library.exception;
 
 import com.lab.library.dto.response.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -75,6 +78,17 @@ public class GlobalExceptionHandler {
                 "You don't have permission to access this resource"
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("Database constraint violation: {}", ex.getMostSpecificCause().getMessage());
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "A database constraint was violated. Please check your data and try again."
+        );
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(MultipartException.class)

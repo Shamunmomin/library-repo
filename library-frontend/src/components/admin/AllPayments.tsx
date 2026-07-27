@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { paymentsApi } from '../../api/payments';
+import { paymentsApi } from '../../services/paymentService';
 import type { PaymentRequest } from '../../types/subscription';
 import { Badge } from '../ui/Badge';
 import { LoadingSpinner } from '../ui/LoadingSpinner';

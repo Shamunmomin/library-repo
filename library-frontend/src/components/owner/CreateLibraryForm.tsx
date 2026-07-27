@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { libraryApi } from '../../api/library';
+import { libraryApi } from '../../services/libraryService';
 import { useTheme } from '../../hooks/useTheme';
 
 const schema = z.object({

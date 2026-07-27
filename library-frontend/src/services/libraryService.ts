@@ -1,5 +1,6 @@
 import api from '../lib/axios';
-import type { Library, CreateLibraryRequest, UpdateLibraryRequest, ApiResponse } from '../types/library';
+import type { Library, CreateLibraryRequest, UpdateLibraryRequest } from '../types/library';
+import type { ApiResponse } from '../types/api';
 
 export const libraryApi = {
   getMyLibrary: async (): Promise<ApiResponse<Library>> => {

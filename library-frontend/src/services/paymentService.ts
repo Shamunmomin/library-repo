@@ -1,5 +1,6 @@
 import api from '../lib/axios';
-import type { PaymentRequest, PaymentApprovalRequest, ApiResponse } from '../types/subscription';
+import type { PaymentRequest, PaymentApprovalRequest } from '../types/subscription';
+import type { ApiResponse } from '../types/api';
 
 export const paymentsApi = {
   getPendingPayments: async (): Promise<ApiResponse<PaymentRequest[]>> => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { libraryApi } from '../../api/library';
+import { libraryApi } from '../../services/libraryService';
 import type { Library } from '../../types/library';
 import { Badge } from '../ui/Badge';
 import { LoadingSpinner } from '../ui/LoadingSpinner';

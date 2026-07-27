@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { OwnerPageLayout } from '../../components/shared/OwnerPageLayout';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { subscriptionApi } from '../../api/subscriptionService';
-import { libraryApi } from '../../api/library';
+import { subscriptionApi } from '../../services/subscriptionService';
+import { libraryApi } from '../../services/libraryService';
 import type { SubscriptionStatus } from '../../types/subscription';
 import { ChoosePlanPage } from './ChoosePlanPage';
 import { PaymentPendingPage } from './PaymentPendingPage';

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Upload, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { subscriptionApi } from '../../api/subscriptionService';
+import { subscriptionApi } from '../../services/subscriptionService';
 import type { SubscriptionPlan } from '../../types/subscription';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { UpiQrCode } from './UpiQrCode';
@@ -9,10 +9,11 @@ import { useTheme } from '../../hooks/useTheme';
 
 export function SubscriptionPlans() {
   const { colors } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
-  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adminPhone, setAdminPhone] = useState('');
   const [upiId, setUpiId] = useState('');
@@ -37,25 +38,26 @@ export function SubscriptionPlans() {
     fetchData();
   }, []);
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handleSubmit = async () => {
-    if (!selectedPlan || !screenshot) {
+    if (!selectedPlan || !screenshotFile) {
       toast.error('Please select a plan and upload payment screenshot');
       return;
     }
 
-    if (screenshot.size > MAX_FILE_SIZE) {
+    if (screenshotFile.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum allowed size is 5 MB.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await subscriptionApi.submitPayment(selectedPlan.id, screenshot);
+      await subscriptionApi.submitPayment(selectedPlan.id, screenshotFile);
       toast.success('Payment submitted! Waiting for admin approval.');
       setSelectedPlan(null);
-      setScreenshot(null);
+      setScreenshotFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Failed to submit payment. Please try again.';
       toast.error(message);
@@ -142,19 +144,20 @@ export function SubscriptionPlans() {
               <div className={`flex items-center gap-3 p-3 border-2 border-dashed ${colors.border.primary} rounded-lg`}>
                 <Upload size={20} className={colors.text.tertiary} />
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+                  onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
                   className={`text-sm ${colors.text.secondary}`}
                 />
               </div>
-              {screenshot && (
-                <p className={`text-xs ${colors.text.tertiary} mt-1`}>Selected: {screenshot.name}</p>
+              {screenshotFile && (
+                <p className={`text-xs ${colors.text.tertiary} mt-1`}>Selected: {screenshotFile.name}</p>
               )}
             </div>
             <button
               onClick={handleSubmit}
-              disabled={!screenshot || isSubmitting}
+              disabled={!screenshotFile || isSubmitting}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {isSubmitting ? 'Submitting...' : 'Submit Payment'}
