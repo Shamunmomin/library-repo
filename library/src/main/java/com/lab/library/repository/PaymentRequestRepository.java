@@ -18,4 +18,6 @@ public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, 
     List<PaymentRequest> findByLibraryIdOrderByCreatedAtDesc(UUID libraryId);
 
     boolean existsByUserIdAndStatus(UUID userId, PaymentStatus status);
+
+    List<PaymentRequest> findByUserIdAndStatus(UUID userId, PaymentStatus status);
 }

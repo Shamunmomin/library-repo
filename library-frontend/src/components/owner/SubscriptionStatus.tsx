@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, ThumbsUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { subscriptionApi } from '../../api/subscription';
 import type { SubscriptionStatus } from '../../types/subscription';
@@ -41,6 +41,24 @@ export function SubscriptionStatusCard() {
             <h4 className={`font-medium ${colors.text.primary}`}>Payment Pending</h4>
             <p className={`text-sm ${colors.text.secondary}`}>
               Your payment request is being reviewed by admin.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status.paymentApproved) {
+    return (
+      <div className={`${colors.card.bg} ${colors.card.shadow} rounded-lg p-4 border border-green-300 dark:border-green-700`}>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+            <ThumbsUp size={20} className="text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h4 className={`font-medium ${colors.text.primary}`}>Payment Approved!</h4>
+            <p className={`text-sm ${colors.text.secondary}`}>
+              Your payment has been approved. Please create your library to activate your subscription.
             </p>
           </div>
         </div>

@@ -16,7 +16,6 @@ import java.util.UUID;
 @Builder
 public class PaymentRequest extends BaseEntity {
 
-    @Column(nullable = false)
     private UUID libraryId;
 
     @Column(nullable = false)

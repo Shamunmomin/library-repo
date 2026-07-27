@@ -3,18 +3,20 @@ package com.lab.library.service;
 import com.lab.library.dto.request.CreateLibraryRequest;
 import com.lab.library.dto.request.UpdateLibraryRequest;
 import com.lab.library.dto.response.LibraryResponse;
-import com.lab.library.entity.Library;
-import com.lab.library.entity.User;
+import com.lab.library.entity.*;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.DuplicateResourceException;
 import com.lab.library.exception.ResourceNotFoundException;
 import com.lab.library.repository.LibraryRepository;
+import com.lab.library.repository.LibrarySubscriptionRepository;
+import com.lab.library.repository.PaymentRequestRepository;
 import com.lab.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,8 @@ public class LibraryService {
 
     private final LibraryRepository libraryRepository;
     private final UserRepository userRepository;
+    private final PaymentRequestRepository paymentRequestRepository;
+    private final LibrarySubscriptionRepository subscriptionRepository;
 
     @Transactional
     public LibraryResponse createLibrary(UUID ownerId, CreateLibraryRequest request) {
@@ -40,16 +44,36 @@ public class LibraryService {
                 .active(true)
                 .build();
 
-        library = libraryRepository.save(library);
+        Library savedLibrary = libraryRepository.save(library);
 
         User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        user.setLibraryId(library.getId());
+        user.setLibraryId(savedLibrary.getId());
         userRepository.save(user);
 
-        log.info("Library created: {} by owner: {}", library.getName(), ownerId);
+        // Auto-create subscription if user has an approved payment
+        paymentRequestRepository.findByUserIdAndStatus(ownerId, PaymentStatus.APPROVED)
+                .stream()
+                .findFirst()
+                .ifPresent(pr -> {
+                    LibrarySubscription subscription = LibrarySubscription.builder()
+                            .libraryId(savedLibrary.getId())
+                            .plan(pr.getPlan())
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusDays(pr.getPlan().getDurationDays()))
+                            .status(SubscriptionStatus.ACTIVE)
+                            .build();
+                    subscriptionRepository.save(subscription);
 
-        return mapToResponse(library, user.getName());
+                    pr.setLibraryId(savedLibrary.getId());
+                    paymentRequestRepository.save(pr);
+
+                    log.info("Auto-created subscription for library: {} from approved payment", savedLibrary.getId());
+                });
+
+        log.info("Library created: {} by owner: {}", savedLibrary.getName(), ownerId);
+
+        return mapToResponse(savedLibrary, user.getName());
     }
 
     public LibraryResponse getLibraryByOwner(UUID ownerId) {

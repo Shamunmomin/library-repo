@@ -50,25 +50,29 @@ public class AdminPaymentService {
         }
 
         SubscriptionPlan plan = paymentRequest.getPlan();
-        LocalDate startDate = LocalDate.now();
-        LocalDate endDate = startDate.plusDays(plan.getDurationDays());
 
-        LibrarySubscription subscription = LibrarySubscription.builder()
-                .libraryId(paymentRequest.getLibraryId())
-                .plan(plan)
-                .startDate(startDate)
-                .endDate(endDate)
-                .status(SubscriptionStatus.ACTIVE)
-                .build();
+        // Only create subscription if library exists
+        if (paymentRequest.getLibraryId() != null) {
+            LocalDate startDate = LocalDate.now();
+            LocalDate endDate = startDate.plusDays(plan.getDurationDays());
 
-        subscriptionRepository.save(subscription);
+            LibrarySubscription subscription = LibrarySubscription.builder()
+                    .libraryId(paymentRequest.getLibraryId())
+                    .plan(plan)
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .status(SubscriptionStatus.ACTIVE)
+                    .build();
+
+            subscriptionRepository.save(subscription);
+        }
 
         paymentRequest.setStatus(PaymentStatus.APPROVED);
         paymentRequest.setAdminNotes(adminNotes);
         paymentRequest.setProcessedAt(LocalDateTime.now());
         paymentRequestRepository.save(paymentRequest);
 
-        log.info("Payment approved for library: {}, plan: {}", paymentRequest.getLibraryId(), plan.getName());
+        log.info("Payment approved for user: {}, plan: {}", paymentRequest.getUserId(), plan.getName());
     }
 
     @Transactional
@@ -97,8 +101,9 @@ public class AdminPaymentService {
     private PaymentRequestResponse mapToResponse(PaymentRequest pr) {
         String userName = userRepository.findById(pr.getUserId())
                 .map(User::getName).orElse("Unknown");
-        String libraryName = libraryRepository.findById(pr.getLibraryId())
-                .map(Library::getName).orElse("Unknown");
+        String libraryName = pr.getLibraryId() != null
+                ? libraryRepository.findById(pr.getLibraryId()).map(Library::getName).orElse("Unknown")
+                : "Not yet created";
 
         return PaymentRequestResponse.builder()
                 .id(pr.getId())

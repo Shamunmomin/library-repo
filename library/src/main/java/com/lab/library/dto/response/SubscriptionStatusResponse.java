@@ -20,4 +20,5 @@ public class SubscriptionStatusResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean pendingPayment;
+    private boolean paymentApproved;
 }

@@ -17,11 +17,12 @@ export interface SubscriptionStatus {
   startDate: string | null;
   endDate: string | null;
   pendingPayment: boolean;
+  paymentApproved: boolean;
 }
 
 export interface PaymentRequest {
   id: string;
-  libraryId: string;
+  libraryId: string | null;
   userId: string;
   userName: string;
   libraryName: string;

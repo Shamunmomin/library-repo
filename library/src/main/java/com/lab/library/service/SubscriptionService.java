@@ -37,10 +37,10 @@ public class SubscriptionService {
     @Value("${file.upload.payments:uploads/payments/}")
     private String uploadDir;
 
-    @Value("${app.admin.phone:+91-XXXXXXXXXX}")
+    @Value("${app.admin.phone}")
     private String adminPhone;
 
-    @Value("${app.admin.upi-id:}")
+    @Value("${app.admin.upi-id}")
     private String adminUpiId;
 
     public List<PlanResponse> getActivePlans() {
@@ -53,11 +53,27 @@ public class SubscriptionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Library library = libraryRepository.findByOwnerId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Library not found for this user"));
-
         boolean hasPendingPayment = paymentRequestRepository
                 .existsByUserIdAndStatus(userId, PaymentStatus.PENDING);
+
+        boolean hasApprovedPayment = !hasPendingPayment &&
+                paymentRequestRepository.existsByUserIdAndStatus(userId, PaymentStatus.APPROVED);
+
+        var libraryOpt = libraryRepository.findByOwnerId(userId);
+
+        if (libraryOpt.isEmpty()) {
+            return SubscriptionStatusResponse.builder()
+                    .subscribed(false)
+                    .status(null)
+                    .planName(null)
+                    .startDate(null)
+                    .endDate(null)
+                    .pendingPayment(hasPendingPayment)
+                    .paymentApproved(hasApprovedPayment)
+                    .build();
+        }
+
+        Library library = libraryOpt.get();
 
         var activeSubscription = subscriptionRepository
                 .findByLibraryIdAndStatus(library.getId(), SubscriptionStatus.ACTIVE);
@@ -71,8 +87,13 @@ public class SubscriptionService {
                     .startDate(sub.getStartDate())
                     .endDate(sub.getEndDate())
                     .pendingPayment(false)
+                    .paymentApproved(false)
                     .build();
         }
+
+        // Has library but no active subscription — check for approved payment
+        boolean hasApprovedPaymentWithLibrary = paymentRequestRepository
+                .existsByUserIdAndStatus(userId, PaymentStatus.APPROVED);
 
         return SubscriptionStatusResponse.builder()
                 .subscribed(false)
@@ -81,6 +102,7 @@ public class SubscriptionService {
                 .startDate(null)
                 .endDate(null)
                 .pendingPayment(hasPendingPayment)
+                .paymentApproved(hasApprovedPaymentWithLibrary)
                 .build();
     }
 
@@ -88,9 +110,6 @@ public class SubscriptionService {
     public void submitPayment(UUID userId, UUID planId, MultipartFile screenshot) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        Library library = libraryRepository.findByOwnerId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Library not found. Please create a library first."));
 
         SubscriptionPlan plan = planRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
@@ -105,8 +124,9 @@ public class SubscriptionService {
             throw new BadRequestException("You already have a pending payment request. Please wait for admin approval.");
         }
 
-        boolean hasActive = subscriptionRepository
-                .findByLibraryIdAndStatus(library.getId(), SubscriptionStatus.ACTIVE).isPresent();
+        boolean hasActive = libraryRepository.findByOwnerId(userId)
+                .flatMap(library -> subscriptionRepository.findByLibraryIdAndStatus(library.getId(), SubscriptionStatus.ACTIVE))
+                .isPresent();
         if (hasActive) {
             throw new BadRequestException("You already have an active subscription.");
         }
@@ -114,7 +134,7 @@ public class SubscriptionService {
         String screenshotPath = saveScreenshot(screenshot, userId);
 
         PaymentRequest paymentRequest = PaymentRequest.builder()
-                .libraryId(library.getId())
+                .libraryId(null)
                 .userId(userId)
                 .plan(plan)
                 .amount(plan.getPrice())

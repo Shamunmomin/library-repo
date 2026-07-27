@@ -59,7 +59,12 @@ export function SubscriptionPlans() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <div className={`flex items-center gap-2 ${colors.text.secondary}`}>
+        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</div>
+        <span className="text-sm font-medium">Choose a subscription plan</span>
+      </div>
+
       {/* Admin Phone */}
       {adminPhone && (
         <div className={`${colors.card.bg} ${colors.card.shadow} rounded-lg p-4 border border-blue-300 dark:border-blue-700`}>
@@ -101,7 +106,10 @@ export function SubscriptionPlans() {
       {/* Payment Section */}
       {selectedPlan && (
         <div className={`${colors.card.bg} ${colors.card.shadow} rounded-lg p-5 border ${colors.border.primary}`}>
-          <h4 className={`font-medium ${colors.text.primary} mb-4`}>Make Payment</h4>
+          <div className={`flex items-center gap-2 mb-4`}>
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">2</div>
+            <h4 className={`font-medium ${colors.text.primary}`}>Make Payment</h4>
+          </div>
 
           {/* UPI QR Code */}
           {upiId && (
