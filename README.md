@@ -219,34 +219,37 @@ src/
 
 ---
 
-### Phase 5: Member & Seat Allocation Management
+### Phase 5: Member & Seat Allocation Management ✅
 
 #### Task 5.1: Backend - Member API
 **Sub-tasks:**
-- [ ] Create MemberRequest DTO (name, email, phone, address, photo, feeAmount)
-- [ ] Create MemberService: add, update, delete, get by library, get by id, search
-- [ ] Create MemberController: CRUD endpoints
+- [x] Create Member entity (UUID PK, Library relation, fee tracking)
+- [x] Create MemberResponse DTO (includes allocatedSeat field)
+- [x] Create MemberService: CRUD, mark fee paid, filter by fee status
+- [x] Create MemberController: CRUD + multipart photo + mark-paid endpoint
 
 #### Task 5.2: Backend - Seat Allocation API
 **Sub-tasks:**
-- [ ] Create SeatAllocationRequest DTO (seatId, memberId, startDate, endDate)
-- [ ] Create SeatAllocationService: allocate seat, end allocation, get active allocations, get member history
-- [ ] Create SeatAllocationController: POST, PUT, GET endpoints
+- [x] Create SeatAllocation entity (UUID PK, Seat/Member relations)
+- [x] Create SeatAllocationService: allocate (changes seat→OCCUPIED), end (changes seat→AVAILABLE), get active, member history
+- [x] Create SeatAllocationController: POST /api/allocations, PUT /{id}/end, GET /active, GET /member/{memberId}
+- [x] Updated SeatService: added getSeatEntity() + updateStatus() for allocation flow
 
 #### Task 5.3: Frontend - Member Management
 **Sub-tasks:**
-- [ ] List members with search/filter
-- [ ] Add member form (modal)
-- [ ] Edit member details
-- [ ] Delete member with confirmation
-- [ ] Show member photo, fee status, allocated seat
+- [x] Member list with search (name/phone) and fee status filter (All/Paid/Unpaid)
+- [x] Add member form (inline, with photo upload)
+- [x] Edit member details (inline form)
+- [x] Delete member with confirmation
+- [x] Show member photo, fee status badge, allocated seat number
+- [x] Mark fee as paid button
 
 #### Task 5.4: Frontend - Seat Allocation
 **Sub-tasks:**
-- [ ] Allocate seat to member (select seat, member, date range)
-- [ ] View all active allocations
-- [ ] End allocation manually
-- [ ] View allocation history for a member
+- [x] Allocate form: select floor → available seats dropdown → member dropdown
+- [x] View all active allocations with member name, seat number, start date
+- [x] End allocation with confirmation
+- [x] Auto-refresh allocations list after allocate/end
 
 ---
 

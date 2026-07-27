@@ -70,10 +70,22 @@ public class SeatService {
         return createBulk(userId, floorId, List.of(seatNumber)).get(0);
     }
 
+    public Seat getSeatEntity(UUID seatId) {
+        return seatRepository.findById(seatId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seat", "id", seatId));
+    }
+
+    @Transactional
+    public void updateStatus(UUID seatId, SeatStatus status) {
+        Seat seat = getSeatEntity(seatId);
+        seat.setStatus(status);
+        seatRepository.save(seat);
+        log.info("Seat {} status updated to: {}", seat.getSeatNumber(), status);
+    }
+
     @Transactional
     public SeatResponse update(UUID seatId, String seatNumber, SeatStatus status) {
-        Seat seat = seatRepository.findById(seatId)
-                .orElseThrow(() -> new ResourceNotFoundException("Seat", "id", seatId));
+        Seat seat = getSeatEntity(seatId);
 
         if (seatNumber != null) seat.setSeatNumber(seatNumber);
         if (status != null) seat.setStatus(status);
