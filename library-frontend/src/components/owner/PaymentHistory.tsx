@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { subscriptionApi } from '../../api/subscription';
+import { subscriptionApi } from '../../api/subscriptionService';
 import type { PaymentRequest } from '../../types/subscription';
 import { Badge } from '../ui/Badge';
 import { LoadingSpinner } from '../ui/LoadingSpinner';

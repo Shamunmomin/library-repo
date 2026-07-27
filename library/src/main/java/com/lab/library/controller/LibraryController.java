@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,7 @@ public class LibraryController {
     private final UserRepository userRepository;
 
     @PostMapping("/api/owner/library")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<LibraryResponse>> createLibrary(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateLibraryRequest request) {
@@ -39,6 +41,7 @@ public class LibraryController {
     }
 
     @GetMapping("/api/owner/library")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<LibraryResponse>> getMyLibrary(
             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -50,6 +53,7 @@ public class LibraryController {
     }
 
     @PutMapping("/api/owner/library")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<LibraryResponse>> updateMyLibrary(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateLibraryRequest request) {
@@ -62,18 +66,21 @@ public class LibraryController {
     }
 
     @GetMapping("/api/admin/libraries")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<LibraryResponse>>> getAllLibraries() {
         List<LibraryResponse> libraries = libraryService.getAllLibraries();
         return ResponseEntity.ok(ApiResponse.success("Libraries retrieved", libraries));
     }
 
     @GetMapping("/api/admin/libraries/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<LibraryResponse>> getLibraryById(@PathVariable UUID id) {
         LibraryResponse library = libraryService.getLibraryById(id);
         return ResponseEntity.ok(ApiResponse.success("Library retrieved", library));
     }
 
     @PutMapping("/api/admin/libraries/{id}/toggle-active")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<LibraryResponse>> toggleLibraryActive(@PathVariable UUID id) {
         LibraryResponse library = libraryService.toggleLibraryActive(id);
         String status = library.isActive() ? "activated" : "deactivated";

@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +29,14 @@ public class SubscriptionController {
     private final UserRepository userRepository;
 
     @GetMapping("/plans")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<List<PlanResponse>>> getPlans() {
         List<PlanResponse> plans = subscriptionService.getActivePlans();
         return ResponseEntity.ok(ApiResponse.success("Plans retrieved successfully", plans));
     }
 
     @GetMapping("/status")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<SubscriptionStatusResponse>> getSubscriptionStatus(
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername())
@@ -44,6 +47,7 @@ public class SubscriptionController {
     }
 
     @PostMapping("/purchase")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<Void>> submitPayment(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("planId") @NotNull UUID planId,
@@ -58,18 +62,21 @@ public class SubscriptionController {
     }
 
     @GetMapping("/admin-phone")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<String>> getAdminPhone() {
         String phone = subscriptionService.getAdminPhone();
         return ResponseEntity.ok(ApiResponse.success("Admin phone retrieved", phone));
     }
 
     @GetMapping("/upi-id")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<String>> getAdminUpiId() {
         String upiId = subscriptionService.getAdminUpiId();
         return ResponseEntity.ok(ApiResponse.success("UPI ID retrieved", upiId));
     }
 
     @GetMapping("/payments")
+    @PreAuthorize("hasRole('LIBRARY_OWNER')")
     public ResponseEntity<ApiResponse<List<PaymentRequestResponse>>> getPaymentHistory(
             @AuthenticationPrincipal UserDetails userDetails) {
 

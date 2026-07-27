@@ -7,6 +7,7 @@ import com.lab.library.service.AdminPaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,24 +21,28 @@ public class AdminPaymentController {
     private final AdminPaymentService adminPaymentService;
 
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<PaymentRequestResponse>>> getPendingPayments() {
         List<PaymentRequestResponse> payments = adminPaymentService.getPendingPayments();
         return ResponseEntity.ok(ApiResponse.success("Pending payments retrieved", payments));
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<PaymentRequestResponse>>> getAllPayments() {
         List<PaymentRequestResponse> payments = adminPaymentService.getAllPayments();
         return ResponseEntity.ok(ApiResponse.success("All payments retrieved", payments));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PaymentRequestResponse>> getPaymentById(@PathVariable UUID id) {
         PaymentRequestResponse payment = adminPaymentService.getPaymentById(id);
         return ResponseEntity.ok(ApiResponse.success("Payment retrieved", payment));
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> approvePayment(
             @PathVariable UUID id,
             @RequestBody(required = false) PaymentApprovalRequest request) {
@@ -47,6 +52,7 @@ public class AdminPaymentController {
     }
 
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> rejectPayment(
             @PathVariable UUID id,
             @RequestBody PaymentApprovalRequest request) {

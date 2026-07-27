@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { OwnerPageLayout } from '../../components/shared/OwnerPageLayout';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { subscriptionApi } from '../../api/subscription';
+import { subscriptionApi } from '../../api/subscriptionService';
 import { libraryApi } from '../../api/library';
 import type { SubscriptionStatus } from '../../types/subscription';
 import { ChoosePlanPage } from './ChoosePlanPage';
