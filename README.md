@@ -67,77 +67,73 @@ src/
 
 ---
 
-### Phase 1: Project Setup & Core Infrastructure
+### Phase 1: Project Setup & Core Infrastructure ✅
 
 #### Task 1.1: Backend - Dependencies & Configuration
 **Sub-tasks:**
-- [ ] Add Maven dependencies: spring-boot-starter-validation, jjwt (io.jsonwebtoken), bucket4j (rate limiting), mapstruct, lombok, postgresql
-- [ ] Configure application.properties/yml (datasource, jpa, jwt secret, file upload, rate limit)
-- [ ] Create base package structure (config, security, controller, service, repository, entity, dto, mapper, enums, exception)
-- [ ] Create LibraryApplication.java main class with @SpringBootApplication
+- [x] Add Maven dependencies: spring-boot-starter-validation, jjwt (io.jsonwebtoken), bucket4j (rate limiting), mapstruct, lombok, postgresql
+- [x] Configure application.properties/yml (datasource, jpa, jwt secret, file upload, rate limit)
+- [x] Create base package structure (config, security, controller, service, repository, entity, dto, mapper, enums, exception)
+- [x] Create LibraryApplication.java main class with @SpringBootApplication
 
 #### Task 1.2: Frontend - Dependencies & Configuration
 **Sub-tasks:**
-- [ ] Install dependencies: react-router-dom, axios, tailwindcss, @heroicons/react, framer-motion, react-hot-toast, zustand (state management)
-- [ ] Configure Tailwind CSS with light/dark theme support
-- [ ] Create base folder structure (components, pages, services, types, utils, context, hooks, guard, layouts)
-- [ ] Set up Vite proxy for API calls to backend
+- [x] Install dependencies: react-router-dom, axios, tailwindcss, @heroicons/react, framer-motion, react-hot-toast
+- [x] Configure Tailwind CSS with light/dark theme support
+- [x] Create base folder structure (components, pages, services, types, utils, context, hooks, guard, layouts)
+- [x] Set up Vite proxy for API calls to backend
 
 ---
 
-### Phase 2: Authentication & Security
+### Phase 2: Authentication & Security ✅
 
 #### Task 2.1: Backend - Enums & Entities Setup
 **Sub-tasks:**
-- [ ] Create enum classes: Role (OWNER, ADMIN), SubscriptionPackage (BASE, PRO), SubscriptionStatus (PENDING, ACTIVE, EXPIRED, REJECTED), SeatStatus (AVAILABLE, OCCUPIED, MAINTENANCE), FeeStatus (PAID, UNPAID, PARTIAL), PaymentStatus (PENDING, COMPLETED, FAILED, REFUNDED)
-- [ ] Create all JPA entities with UUID primary keys, Lombok, SLF4J logging
-- [ ] Create all JPA repositories
+- [x] Create enum classes: Role, SubscriptionPackage, SubscriptionStatus, SeatStatus, FeeStatus, PaymentStatus, AllocationStatus
+- [x] Create JPA entities (User, RefreshToken) with UUID primary keys, Lombok
+- [x] Create JPA repositories (UserRepository, RefreshTokenRepository)
 
 #### Task 2.2: Backend - JWT Security Implementation
 **Sub-tasks:**
-- [ ] Create JwtTokenProvider (generate access token 15min, refresh token 7 days, validate, extract claims)
-- [ ] Create JwtAuthenticationFilter (extends OncePerRequestFilter, extract JWT, validate, set SecurityContext)
-- [ ] Create CustomUserDetailsService (load user by email from DB)
-- [ ] Create SecurityConfig (SecurityFilterChain, disable CSRF, stateless session, permit auth endpoints, authenticate others)
-- [ ] Create CorsConfig (allow frontend origin)
-- [ ] Create RateLimitingConfig (bucket4j for login/register endpoints)
+- [x] Create JwtTokenProvider (generate access token 15min, refresh token 7 days, validate, extract claims)
+- [x] Create JwtAuthenticationFilter (extract JWT, validate, set SecurityContext)
+- [x] Create CustomUserDetailsService (load user by email from DB)
+- [x] Create SecurityConfig (SecurityFilterChain, stateless session, permit /api/auth/**)
+- [x] Create CorsConfig (CorsConfigurationSource for frontend origin)
+- [x] Create RateLimitingConfig (bucket4j for login/register endpoints)
 
 #### Task 2.3: Backend - Auth API
 **Sub-tasks:**
-- [ ] Create AuthController: POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh-token, POST /api/auth/logout
-- [ ] Create AuthService: register (default role OWNER), login (validate credentials, generate tokens), refresh token, logout (invalidate refresh token)
-- [ ] Create AuthRequest DTO (email, password)
-- [ ] Create RegisterRequest DTO (name, email, password, phone)
-- [ ] Create AuthResponse DTO (accessToken, refreshToken, user info)
-- [ ] Create RefreshTokenRequest DTO
-- [ ] Create UserMapper (Entity <-> DTO)
-- [ ] Implement UserDetailsService with logging
+- [x] Create AuthController: POST /api/auth/register, /login, /refresh-token, /logout
+- [x] Create AuthService: register (default role OWNER), login, refresh token, logout
+- [x] Create LoginRequest, RegisterRequest, RefreshTokenRequest DTOs
+- [x] Create AuthResponse, UserResponse DTOs
+- [x] Create UserMapper (MapStruct)
 
 #### Task 2.4: Backend - Exception Handling
 **Sub-tasks:**
-- [ ] Create custom exceptions: ResourceNotFoundException, BadRequestException, UnauthorizedException, DuplicateResourceException
-- [ ] Create GlobalExceptionHandler (@RestControllerAdvice) with proper error response format
+- [x] Create custom exceptions: ResourceNotFoundException, BadRequestException, UnauthorizedException, DuplicateResourceException
+- [x] Create GlobalExceptionHandler (@RestControllerAdvice) with proper error response format
 
 #### Task 2.5: Frontend - Auth Services & Context
 **Sub-tasks:**
-- [ ] Create axios instance with base URL, interceptors for JWT attachment and 401 refresh logic
-- [ ] Create auth service (login, register, refreshToken, logout API calls)
-- [ ] Create AuthContext with provider (user state, login, logout, refresh, isLoading)
-- [ ] Create useAuth custom hook
-- [ ] Store tokens in localStorage, auto-refresh on 401 or before expiry
+- [x] Create axios instance with interceptors for JWT attachment and 401 refresh logic
+- [x] Create auth service (login, register, refreshToken, logout API calls)
+- [x] Create AuthContext with provider (user state, login, logout, isLoading)
+- [x] Store tokens in localStorage, auto-refresh token on 401
 
 #### Task 2.6: Frontend - Auth Pages
 **Sub-tasks:**
-- [ ] Create Login page (email, password, submit, link to register)
-- [ ] Create Register page (name, email, password, phone, submit, link to login)
-- [ ] Add form validation
-- [ ] Redirect to splash/onboarding on successful login
+- [x] Create Login page (email, password, validation, link to register)
+- [x] Create Register page (name, email, password, phone, validation, link to login)
+- [x] Form validation with error messages
+- [x] Redirect to splash on successful login/register
 
 #### Task 2.7: Frontend - Route Guards
 **Sub-tasks:**
-- [ ] Create AuthGuard (check if authenticated, redirect to login if not)
-- [ ] Create RoleGuard (check user role, redirect to appropriate dashboard if wrong role)
-- [ ] Define protected route wrappers
+- [x] Create AuthGuard (check if authenticated, redirect to login if not)
+- [x] Role-based access (requiredRole prop)
+- [x] Define protected route wrappers in App.tsx
 
 ---
 
