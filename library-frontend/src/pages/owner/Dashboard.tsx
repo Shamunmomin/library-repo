@@ -5,6 +5,7 @@ import { memberService } from '../../services/memberService'
 import { subscriptionService } from '../../services/subscriptionService'
 import type { OwnerDashboardStats, Member, Subscription } from '../../types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { SkeletonCard, SkeletonChart } from '../../components/Skeleton'
 import toast from 'react-hot-toast'
 
 const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b']
@@ -29,7 +30,17 @@ export default function OwnerDashboard() {
     .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>
+  if (loading) return (
+    <div>
+      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-6 animate-pulse" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => <SkeletonChart key={i} />)}
+      </div>
+    </div>
+  )
   if (!stats) return <div className="text-center py-12 text-gray-500">Failed to load data</div>
 
   const feeData = [

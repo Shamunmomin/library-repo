@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminService } from '../../services/adminService'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 interface AdminUser {
@@ -40,7 +41,7 @@ export default function AdminUsers() {
     !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
   )
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>
+  if (loading) return <LoadingSpinner />
 
   if (selected) {
     return (
@@ -69,8 +70,8 @@ export default function AdminUsers() {
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No users found</div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Name</th>

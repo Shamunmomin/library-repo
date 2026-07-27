@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { libraryService } from '../../services/libraryService'
 import type { Library } from '../../types'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 export default function OwnerLibrary() {
@@ -37,7 +38,7 @@ export default function OwnerLibrary() {
   }
 
   if (library === undefined) {
-    return <div className="text-center py-12 text-gray-500">Loading...</div>
+    return <LoadingSpinner />
   }
 
   if (library) {

@@ -4,6 +4,7 @@ import { memberService } from '../../services/memberService'
 import { floorService } from '../../services/floorService'
 import { seatService } from '../../services/seatService'
 import type { SeatAllocation, Member, Floor, Seat } from '../../types'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 export default function OwnerAllocations() {
@@ -66,7 +67,7 @@ export default function OwnerAllocations() {
     } catch { toast.error('Failed to end allocation') }
   }
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>
+  if (loading) return <LoadingSpinner />
 
   return (
     <div>
@@ -99,7 +100,7 @@ export default function OwnerAllocations() {
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">No active allocations</div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Member</th>
@@ -122,7 +123,7 @@ export default function OwnerAllocations() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

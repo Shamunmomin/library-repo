@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { seatService } from '../../services/seatService'
 import { floorService } from '../../services/floorService'
 import type { Seat, Floor } from '../../types'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 const statusColors: Record<string, string> = {
@@ -64,7 +65,7 @@ export default function OwnerSeats() {
     } catch { toast.error('Failed to delete seat') }
   }
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>
+  if (loading) return <LoadingSpinner />
 
   const counts = { AVAILABLE: 0, OCCUPIED: 0, MAINTENANCE: 0 }
   seats.forEach(s => { counts[s.status as keyof typeof counts]++ })

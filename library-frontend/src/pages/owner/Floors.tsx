@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { floorService } from '../../services/floorService'
+import { seatService } from '../../services/seatService'
 import type { Floor } from '../../types'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 export default function OwnerFloors() {
@@ -57,7 +59,7 @@ export default function OwnerFloors() {
     setName(floor.name); setDescription(floor.description || ''); setEditId(floor.id); setShowForm(true)
   }
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>
+  if (loading) return <LoadingSpinner />
 
   return (
     <div>

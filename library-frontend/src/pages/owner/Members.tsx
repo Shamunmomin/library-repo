@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { memberService } from '../../services/memberService'
 import type { Member } from '../../types'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
 export default function OwnerMembers() {
@@ -84,7 +85,7 @@ export default function OwnerMembers() {
     PARTIAL: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
   }
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>
+  if (loading) return <LoadingSpinner />
 
   return (
     <div>
@@ -126,8 +127,8 @@ export default function OwnerMembers() {
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No members found</div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Name</th>
