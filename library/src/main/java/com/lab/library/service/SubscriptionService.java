@@ -1,0 +1,105 @@
+package com.lab.library.service;
+
+import com.lab.library.dto.response.SubscriptionResponse;
+import com.lab.library.entity.Subscription;
+import com.lab.library.entity.User;
+import com.lab.library.enums.SubscriptionPackage;
+import com.lab.library.enums.SubscriptionStatus;
+import com.lab.library.exception.BadRequestException;
+import com.lab.library.exception.ResourceNotFoundException;
+import com.lab.library.mapper.SubscriptionMapper;
+import com.lab.library.repository.SubscriptionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class SubscriptionService {
+
+    private final SubscriptionRepository subscriptionRepository;
+    private final UserService userService;
+    private final SubscriptionMapper subscriptionMapper;
+
+    @Transactional
+    public SubscriptionResponse create(UUID userId, SubscriptionPackage packageType, String screenshotPath) {
+        User user = userService.getById(userId);
+
+        boolean hasActive = subscriptionRepository.existsByUserAndStatus(user, SubscriptionStatus.ACTIVE);
+        if (hasActive) {
+            throw new BadRequestException("You already have an active subscription");
+        }
+
+        boolean hasPending = subscriptionRepository.existsByUserAndStatus(user, SubscriptionStatus.PENDING);
+        if (hasPending) {
+            throw new BadRequestException("You already have a pending subscription request");
+        }
+
+        Subscription subscription = Subscription.builder()
+                .user(user)
+                .packageType(packageType)
+                .status(SubscriptionStatus.PENDING)
+                .paymentScreenshot(screenshotPath)
+                .build();
+
+        subscription = subscriptionRepository.save(subscription);
+        log.info("Subscription created for user: {} package: {}", user.getEmail(), packageType);
+        return subscriptionMapper.toResponse(subscription);
+    }
+
+    public SubscriptionResponse getMySubscription(UUID userId) {
+        User user = userService.getById(userId);
+        return subscriptionRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .map(subscriptionMapper::toResponse)
+                .orElse(null);
+    }
+
+    public SubscriptionResponse getById(UUID id) {
+        Subscription subscription = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription", "id", id));
+        return subscriptionMapper.toResponse(subscription);
+    }
+
+    public List<SubscriptionResponse> getAllSubscriptions() {
+        return subscriptionRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(subscriptionMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<SubscriptionResponse> getSubscriptionsByStatus(SubscriptionStatus status) {
+        return subscriptionRepository.findByStatus(status).stream()
+                .map(subscriptionMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public SubscriptionResponse verify(UUID id, SubscriptionStatus newStatus, String rejectionReason) {
+        Subscription subscription = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription", "id", id));
+
+        if (subscription.getStatus() != SubscriptionStatus.PENDING) {
+            throw new BadRequestException("Only pending subscriptions can be verified");
+        }
+
+        subscription.setStatus(newStatus);
+
+        if (newStatus == SubscriptionStatus.ACTIVE) {
+            subscription.setStartDate(LocalDateTime.now());
+            subscription.setEndDate(LocalDateTime.now().plusMonths(1));
+            log.info("Subscription {} activated for user: {}", id, subscription.getUser().getEmail());
+        } else if (newStatus == SubscriptionStatus.REJECTED) {
+            subscription.setRejectionReason(rejectionReason);
+            log.info("Subscription {} rejected for user: {}. Reason: {}", id, subscription.getUser().getEmail(), rejectionReason);
+        }
+
+        subscription = subscriptionRepository.save(subscription);
+        return subscriptionMapper.toResponse(subscription);
+    }
+}

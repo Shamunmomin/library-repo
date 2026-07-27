@@ -137,42 +137,42 @@ src/
 
 ---
 
-### Phase 3: User Onboarding & Subscription Flow
+### Phase 3: User Onboarding & Subscription Flow ✅
 
 #### Task 3.1: Backend - Subscription API
 **Sub-tasks:**
-- [ ] Create Subscription entity and repository
-- [ ] Create SubscriptionRequest DTO (packageType, paymentScreenshot)
-- [ ] Create SubscriptionService: create subscription request, get user subscription, admin verify/reject
-- [ ] Create SubscriptionController: POST /api/subscriptions, GET /api/subscriptions/my, GET /api/subscriptions/{id}
-- [ ] Create admin endpoints: GET /api/admin/subscriptions (list all), PUT /api/admin/subscriptions/{id}/verify (accept/reject)
+- [x] Create Subscription entity and repository
+- [x] Create SubscriptionService: create, get my, admin verify/reject
+- [x] Create SubscriptionController: POST /api/subscriptions (multipart), GET /api/subscriptions/my, GET /api/subscriptions/{id}
+- [x] Admin endpoints: GET /api/admin/subscriptions (with status filter), PUT /api/admin/subscriptions/{id}/verify
+- [x] WebMvcConfig to serve uploaded files
 
 #### Task 3.2: Backend - Library Setup Check API
 **Sub-tasks:**
-- [ ] Create Library entity and repository
-- [ ] Create LibraryService: create library, get library by user, check if user has library
-- [ ] Create endpoint: GET /api/users/onboarding-status (returns: subscription status, library exists, etc.)
+- [x] Create Library entity and repository
+- [x] Create LibraryService: create, get by user, onboarding status
+- [x] Create endpoint: GET /api/users/onboarding-status
+- [x] Create UserService for current user extraction from SecurityContext
 
 #### Task 3.3: Frontend - Splash Screen
 **Sub-tasks:**
-- [ ] Create animated splash screen (library icon + name with fade/slide animation)
-- [ ] During splash, call onboarding-status API to determine next step
-- [ ] Logic: no subscription → redirect to subscription page; subscription PENDING → waiting page; subscription REJECTED → show message + resubscribe option; subscription ACTIVE + no library → redirect to add library; subscription ACTIVE + library → redirect to dashboard
+- [x] Animated splash screen with library icon + name (framer-motion)
+- [x] Calls onboarding-status API with 2.5s delay
+- [x] Logic: no subscription → /subscribe; PENDING → stays with message; REJECTED → /subscribe; ACTIVE + no library → /owner/library; ACTIVE + library → /owner/dashboard
 
 #### Task 3.4: Frontend - Subscription Page
 **Sub-tasks:**
-- [ ] Display Base and Pro package cards with feature comparison
-- [ ] Show QR code for payment
-- [ ] Allow file upload for payment screenshot (mandatory)
-- [ ] Submit subscription request
-- [ ] Show success/waiting message
+- [x] Base and Pro package cards with feature comparison (animated selection)
+- [x] QR code placeholder for payment
+- [x] File upload for payment screenshot (mandatory validation)
+- [x] Submit creates subscription; shows success/waiting message
 
 #### Task 3.5: Frontend - Admin Subscription Management
 **Sub-tasks:**
-- [ ] Admin subscription list page with filters (pending, active, rejected)
-- [ ] View payment screenshot
-- [ ] Accept/Reject subscription with optional note
-- [ ] Toast notifications on action
+- [x] Subscription list with filters (All, Pending, Active, Rejected)
+- [x] View payment screenshot link
+- [x] Accept/Reject with optional rejection reason
+- [x] Toast notifications on actions
 
 ---
 
