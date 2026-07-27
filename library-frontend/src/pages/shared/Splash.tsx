@@ -31,6 +31,9 @@ export default function Splash() {
         } else if (status.subscription?.status === 'REJECTED') {
           setMessage('Your previous request was rejected. Please resubscribe.')
           setTimeout(() => navigate(ROUTES.SUBSCRIBE), 2000)
+        } else if (status.subscription?.status === 'EXPIRED') {
+          setMessage('Your subscription has expired. Please resubscribe.')
+          setTimeout(() => navigate(ROUTES.SUBSCRIBE), 2000)
         } else if (status.subscription?.status === 'ACTIVE' && !status.hasLibrary) {
           setMessage('Setup your library to get started!')
           setTimeout(() => navigate('/owner/library'), 1500)

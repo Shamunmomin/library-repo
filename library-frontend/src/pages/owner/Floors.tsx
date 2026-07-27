@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { floorService } from '../../services/floorService'
-import { seatService } from '../../services/seatService'
 import type { Floor } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'

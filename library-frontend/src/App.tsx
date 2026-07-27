@@ -24,6 +24,7 @@ const AdminUsers = lazy(() => import('./pages/admin/Users'))
 const AdminPayments = lazy(() => import('./pages/admin/Payments'))
 const OwnerLayout = lazy(() => import('./layouts/OwnerLayout'))
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'))
+const AuthLayout = lazy(() => import('./layouts/AuthLayout'))
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
@@ -36,8 +37,8 @@ export default function App() {
         <SuspenseWrapper>
           <Routes>
             <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
-            <Route path={ROUTES.LOGIN} element={<Login />} />
-            <Route path={ROUTES.REGISTER} element={<Register />} />
+            <Route path={ROUTES.LOGIN} element={<AuthLayout><Login /></AuthLayout>} />
+            <Route path={ROUTES.REGISTER} element={<AuthLayout><Register /></AuthLayout>} />
 
             <Route
               path={ROUTES.SPLASH}

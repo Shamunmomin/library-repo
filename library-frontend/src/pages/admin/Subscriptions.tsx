@@ -88,7 +88,7 @@ export default function AdminSubscriptions() {
             <tbody>
               {subscriptions.map(sub => (
                 <tr key={sub.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-gray-900 dark:text-white">{sub.userId}</td>
+                  <td className="px-4 py-3 text-gray-900 dark:text-white">{sub.userName || sub.userId}</td>
                   <td className="px-4 py-3">
                     <span className="font-medium text-gray-900 dark:text-white">{sub.packageType}</span>
                   </td>

@@ -36,9 +36,12 @@ export type SubscriptionStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'REJECTED'
 export interface Subscription {
   id: string
   userId: string
+  userName?: string
+  userEmail?: string
   packageType: SubscriptionPackage
   status: SubscriptionStatus
   paymentScreenshot: string
+  rejectionReason?: string
   startDate: string | null
   endDate: string | null
   createdAt: string

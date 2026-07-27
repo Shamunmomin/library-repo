@@ -9,6 +9,8 @@ import org.mapstruct.Mapping;
 public interface SubscriptionMapper {
 
     @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "userName", source = "user.name")
+    @Mapping(target = "userEmail", source = "user.email")
     @Mapping(target = "packageType", source = "packageType")
     @Mapping(target = "status", source = "status")
     SubscriptionResponse toResponse(Subscription subscription);

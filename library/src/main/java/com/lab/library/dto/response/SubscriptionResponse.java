@@ -15,6 +15,8 @@ import java.util.UUID;
 public class SubscriptionResponse {
     private UUID id;
     private UUID userId;
+    private String userName;
+    private String userEmail;
     private String packageType;
     private String status;
     private String paymentScreenshot;
