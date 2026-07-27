@@ -17,4 +17,5 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
     long countByFloorAndStatus(Floor floor, SeatStatus status);
     boolean existsByFloorAndSeatNumber(Floor floor, String seatNumber);
     long countAllByFloorLibrary(Library library);
+    long countAllByFloorLibraryAndStatus(Library library, SeatStatus status);
 }
