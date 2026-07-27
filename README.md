@@ -176,44 +176,46 @@ src/
 
 ---
 
-### Phase 4: Library, Floor & Seat Management
+### Phase 4: Library, Floor & Seat Management ✅
 
 #### Task 4.1: Backend - Library API
 **Sub-tasks:**
-- [ ] Create LibraryRequest DTO (name, address, phone, icon)
-- [ ] Create LibraryService: create (check subscription limits for BASE: 1 library, PRO: 2 libraries), update, get by user, get by id
-- [ ] Create LibraryController: POST, PUT /api/libraries/{id}, GET /api/libraries/my, GET /api/libraries/{id}
+- [x] Create Library entity (already in Phase 3)
+- [x] Update LibraryService: create with subscription limits, update, get library entity
+- [x] Create LibraryController: POST (multipart), PUT /api/libraries/{id}, GET /api/libraries/my, GET /api/libraries/{id}
+- [x] Enforce limits: BASE=1 library, PRO=2 libraries
 
 #### Task 4.2: Backend - Floor & Seat API
 **Sub-tasks:**
-- [ ] Create FloorRequest DTO (libraryId, name, description)
-- [ ] Create SeatRequest DTO (floorId, seatNumber)
-- [ ] Create FloorService: add floor to library, update, delete, get floors by library
-- [ ] Create SeatService: add seats to floor, update, delete, get seats by floor, change status
-- [ ] Create FloorController: CRUD endpoints
-- [ ] Create SeatController: CRUD endpoints
-- [ ] Enforce subscription limits (BASE: 1 floor, 100 seats; PRO: unlimited)
+- [x] Create Floor and Seat entities (UUID PKs)
+- [x] Create FloorResponse, SeatResponse DTOs
+- [x] Create FloorMapper, SeatMapper (MapStruct)
+- [x] Create FloorService: add, update, delete, get by library (BASE=1 floor limit)
+- [x] Create SeatService: add single/bulk, update, delete, get by floor (BASE=100 seats limit)
+- [x] Create FloorController: CRUD endpoints
+- [x] Create SeatController: CRUD + bulk endpoints
 
 #### Task 4.3: Frontend - Library Setup Page
 **Sub-tasks:**
-- [ ] Create Add Library form (name, address, phone, icon upload)
-- [ ] Show library card on dashboard after creation
+- [x] Library page with create form (name, address, phone, icon) or card view if exists
+- [x] Form validation and toast feedback
 
 #### Task 4.4: Frontend - Floor Management Page
 **Sub-tasks:**
-- [ ] List floors for a library
-- [ ] Add new floor (modal/form)
-- [ ] Edit floor name
-- [ ] Delete floor with confirmation
-- [ ] Navigate to seats for a floor
+- [x] List floors with seat counts
+- [x] Add floor form (inline toggle)
+- [x] Edit floor (inline form)
+- [x] Delete floor with confirmation
+- [x] Navigate to seats per floor
 
 #### Task 4.5: Frontend - Seat Management Page
 **Sub-tasks:**
-- [ ] Visual seat grid layout (available/occupied/maintenance)
-- [ ] Add seats (bulk add with count or single)
-- [ ] Edit seat number/status
-- [ ] Delete seat
-- [ ] Show seat count and availability stats
+- [x] Visual seat grid (responsive columns)
+- [x] Color-coded status (green=available, red=occupied, yellow=maintenance)
+- [x] Bulk add seats (comma-separated)
+- [x] Toggle seat status (AVAILABLE ↔ MAINTENANCE)
+- [x] Delete individual seat with hover delete button
+- [x] Availability stats bar
 
 ---
 

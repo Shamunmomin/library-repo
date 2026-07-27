@@ -14,4 +14,5 @@ public interface LibraryRepository extends JpaRepository<Library, UUID> {
     Optional<Library> findByUser(User user);
     List<Library> findAllByOrderByCreatedAtDesc();
     boolean existsByUser(User user);
+    long countByUser(User user);
 }

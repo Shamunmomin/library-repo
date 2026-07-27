@@ -28,6 +28,14 @@ public class SubscriptionService {
     private final UserService userService;
     private final SubscriptionMapper subscriptionMapper;
 
+    public SubscriptionPackage getUserActivePackage(UUID userId) {
+        User user = userService.getById(userId);
+        return subscriptionRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .filter(sub -> sub.getStatus() == SubscriptionStatus.ACTIVE)
+                .map(Subscription::getPackageType)
+                .orElse(null);
+    }
+
     @Transactional
     public SubscriptionResponse create(UUID userId, SubscriptionPackage packageType, String screenshotPath) {
         User user = userService.getById(userId);
