@@ -5,6 +5,7 @@ import com.lab.library.entity.Member;
 import com.lab.library.entity.Seat;
 import com.lab.library.entity.SeatAllocation;
 import com.lab.library.enums.AllocationStatus;
+import com.lab.library.enums.FeeStatus;
 import com.lab.library.enums.SeatStatus;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.ResourceNotFoundException;
@@ -34,6 +35,10 @@ public class SeatAllocationService {
     public SeatAllocationResponse allocate(UUID seatId, UUID memberId, LocalDateTime startDate, LocalDateTime endDate) {
         Seat seat = seatService.getSeatEntity(seatId);
         Member member = memberService.getMemberEntity(memberId);
+
+        if (member.getFeeStatus() != FeeStatus.PAID) {
+            throw new BadRequestException("Member " + member.getName() + " has " + member.getFeeStatus() + " fee status. Please collect fee first.");
+        }
 
         if (seat.getStatus() != SeatStatus.AVAILABLE) {
             throw new BadRequestException("Seat " + seat.getSeatNumber() + " is not available");
