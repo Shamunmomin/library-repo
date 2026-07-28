@@ -36,6 +36,11 @@ export const memberService = {
     await api.delete(`/members/${id}`)
   },
 
+  async getFeeExpired() {
+    const response = await api.get<Member[]>('/members/fee-expired')
+    return response.data
+  },
+
   async markFeePaid(id: string) {
     const response = await api.put<Member>(`/members/${id}/mark-paid`)
     return response.data

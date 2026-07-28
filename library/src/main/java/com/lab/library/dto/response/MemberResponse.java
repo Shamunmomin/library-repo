@@ -23,6 +23,7 @@ public class MemberResponse {
     private String address;
     private String photo;
     private LocalDate joinDate;
+    private LocalDate paidUpTo;
     private BigDecimal feeAmount;
     private String feeStatus;
     private String allocatedSeat;

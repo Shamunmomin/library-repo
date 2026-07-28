@@ -43,6 +43,9 @@ public class Member {
     @Column(name = "join_date")
     private LocalDate joinDate;
 
+    @Column(name = "paid_up_to")
+    private LocalDate paidUpTo;
+
     @Column(name = "fee_amount", precision = 10, scale = 2)
     private BigDecimal feeAmount;
 

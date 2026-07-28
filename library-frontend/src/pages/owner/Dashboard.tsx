@@ -15,6 +15,10 @@ export default function OwnerDashboard() {
   const [stats, setStats] = useState<OwnerDashboardStats | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [expiredMembers, setExpiredMembers] = useState<Member[]>([])
+  const [showExpiredList, setShowExpiredList] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [payingMember, setPayingMember] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,13 +26,28 @@ export default function OwnerDashboard() {
       dashboardService.getOwnerStats(),
       memberService.getAll(),
       subscriptionService.getMySubscription(),
-    ]).then(([s, m, sub]) => {
+      memberService.getFeeExpired(),
+    ]).then(([s, m, sub, expired]) => {
       setStats(s)
       setMembers(m)
       setSubscription(sub)
+      setExpiredMembers(expired)
     }).catch(() => toast.error('Failed to load dashboard'))
     .finally(() => setLoading(false))
   }, [])
+
+  async function handleMarkPaid(memberId: string) {
+    setPayingMember(memberId)
+    try {
+      const updated = await memberService.markFeePaid(memberId)
+      toast.success('Fee marked as paid')
+      setExpiredMembers(prev => prev.filter(m => m.id !== memberId))
+      setSelectedMember(updated)
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg || 'Failed to mark fee as paid')
+    } finally { setPayingMember(null) }
+  }
 
   if (loading) return (
     <div>
@@ -67,6 +86,34 @@ export default function OwnerDashboard() {
         <StatCard label="Active Members" value={stats.activeMembers} color="bg-purple-500" />
         <StatCard label="Pending Dues" value={stats.pendingDues} color="bg-orange-500" />
       </div>
+
+      {expiredMembers.length > 0 && (
+        <div className="mb-6 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 overflow-hidden">
+          <button
+            onClick={() => setShowExpiredList(!showExpiredList)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+          >
+            <span>⚠ {expiredMembers.length} member{expiredMembers.length !== 1 ? 's' : ''} with expired fee{expiredMembers.length !== 1 ? 's' : ''}</span>
+            <svg className={`w-4 h-4 transition-transform ${showExpiredList ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showExpiredList && (
+            <div className="border-t border-red-200 dark:border-red-800 divide-y divide-red-200 dark:divide-red-800">
+              {expiredMembers.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedMember(m)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-left"
+                >
+                  <span className="font-medium">{m.name}</span>
+                  <span className="text-xs text-red-500 dark:text-red-400">{m.phone}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
@@ -147,6 +194,91 @@ export default function OwnerDashboard() {
           </div>
         </div>
       </div>
+
+      {selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSelectedMember(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Member Details</h2>
+              <button onClick={() => setSelectedMember(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+              {selectedMember.photo ? (
+                <img src={selectedMember.photo} alt="" className="w-12 h-12 rounded-full object-cover" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-lg">
+                  {selectedMember.name.charAt(0)}
+                </div>
+              )}
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">{selectedMember.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{selectedMember.phone}</p>
+                {selectedMember.email && <p className="text-xs text-gray-400 dark:text-gray-500">{selectedMember.email}</p>}
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Join Date</span>
+                <span className="text-gray-900 dark:text-white">{new Date(selectedMember.joinDate).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Monthly Fee</span>
+                <span className="text-gray-900 dark:text-white font-medium">Rs.{selectedMember.feeAmount || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Fee Status</span>
+                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                  selectedMember.feeStatus === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                  selectedMember.feeStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                }`}>{selectedMember.feeStatus}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Paid Up To</span>
+                <span className="text-gray-900 dark:text-white">
+                  {selectedMember.paidUpTo ? new Date(selectedMember.paidUpTo).toLocaleDateString() : '-'}
+                </span>
+              </div>
+              {selectedMember.paidUpTo && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Status</span>
+                  <span className={`text-xs font-medium ${new Date(selectedMember.paidUpTo) > new Date() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {new Date(selectedMember.paidUpTo) > new Date() ? 'Active' : 'Expired'}
+                  </span>
+                </div>
+              )}
+              {selectedMember.allocatedSeat && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Allocated Seat</span>
+                  <span className="text-gray-900 dark:text-white">{selectedMember.allocatedSeat}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 flex gap-3 justify-end">
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => handleMarkPaid(selectedMember.id)}
+                disabled={payingMember === selectedMember.id}
+                className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
+              >
+                {payingMember === selectedMember.id ? 'Processing...' : 'Mark as Paid'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

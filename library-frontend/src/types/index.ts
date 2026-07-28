@@ -87,6 +87,7 @@ export interface Member {
   address: string
   photo: string
   joinDate: string
+  paidUpTo?: string
   feeAmount: number
   feeStatus: FeeStatus
   createdAt: string

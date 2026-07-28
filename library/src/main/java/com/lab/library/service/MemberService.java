@@ -88,10 +88,25 @@ public class MemberService {
     public MemberResponse markFeePaid(UUID memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
+
+        LocalDate today = LocalDate.now();
+        if (member.getPaidUpTo() == null || member.getPaidUpTo().isBefore(today)) {
+            member.setPaidUpTo(today.plusMonths(1));
+        } else {
+            member.setPaidUpTo(member.getPaidUpTo().plusMonths(1));
+        }
         member.setFeeStatus(FeeStatus.PAID);
         member = memberRepository.save(member);
-        log.info("Member fee marked paid: {}", member.getName());
+        log.info("Member fee marked paid: {}, paid up to {}", member.getName(), member.getPaidUpTo());
         return buildResponse(member);
+    }
+
+    public List<MemberResponse> getExpiredFeeMembers(UUID userId) {
+        User user = userService.getById(userId);
+        Library library = libraryService.getLibraryByUser(user);
+        return memberRepository.findExpiredFeeMembers(library, LocalDate.now()).stream()
+                .map(this::buildResponse)
+                .collect(Collectors.toList());
     }
 
     public List<MemberResponse> getByLibrary(UUID userId) {

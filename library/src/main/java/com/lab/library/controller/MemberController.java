@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('OWNER')")
 public class MemberController {
 
     private final MemberService memberService;
@@ -89,6 +91,12 @@ public class MemberController {
     @PutMapping("/{id}/mark-paid")
     public ResponseEntity<MemberResponse> markFeePaid(@PathVariable UUID id) {
         return ResponseEntity.ok(memberService.markFeePaid(id));
+    }
+
+    @GetMapping("/fee-expired")
+    public ResponseEntity<List<MemberResponse>> getFeeExpired() {
+        UUID userId = userService.getCurrentUserId();
+        return ResponseEntity.ok(memberService.getExpiredFeeMembers(userId));
     }
 
     private String saveFile(MultipartFile file, String subDir) throws IOException {
