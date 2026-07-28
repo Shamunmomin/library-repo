@@ -25,8 +25,8 @@ export default function Login() {
     e.preventDefault()
     if (!validate()) return
     try {
-      await login(email, password)
-      navigate(ROUTES.SPLASH)
+      const user = await login(email, password)
+      navigate(user.role === 'ADMIN' ? ROUTES.ADMIN_DASHBOARD : ROUTES.SPLASH)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       toast.error(msg || 'Login failed. Please try again.')
