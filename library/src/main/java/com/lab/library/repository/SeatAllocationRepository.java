@@ -6,6 +6,7 @@ import com.lab.library.entity.Seat;
 import com.lab.library.entity.SeatAllocation;
 import com.lab.library.enums.AllocationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,4 +26,8 @@ public interface SeatAllocationRepository extends JpaRepository<SeatAllocation, 
 
     @Query("SELECT sa FROM SeatAllocation sa WHERE sa.seat.floor.library = :library AND sa.status = :status ORDER BY sa.createdAt DESC")
     List<SeatAllocation> findByLibraryAndStatus(@Param("library") Library library, @Param("status") AllocationStatus status);
+
+    @Modifying
+    @Query("DELETE FROM SeatAllocation sa WHERE sa.seat.id IN :seatIds")
+    void deleteBySeatIds(@Param("seatIds") List<UUID> seatIds);
 }

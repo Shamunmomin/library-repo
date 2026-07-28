@@ -62,6 +62,7 @@ export interface Floor {
   libraryId: string
   name: string
   description: string
+  seatCount: number
   createdAt: string
 }
 

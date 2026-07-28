@@ -70,7 +70,7 @@ export default function Sidebar({ title, navItems, basePath }: SidebarProps) {
 
           <div className="p-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
             <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 truncate">
-              {user?.name} ({user?.role})
+              Owner-Name : {user?.name}
             </div>
             <div className="flex gap-2">
               <button onClick={toggleTheme} className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">

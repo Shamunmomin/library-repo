@@ -12,6 +12,7 @@ import java.util.UUID;
 
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, UUID> {
+    List<Seat> findByFloor(Floor floor);
     List<Seat> findByFloorOrderBySeatNumberAsc(Floor floor);
     long countByFloor(Floor floor);
     long countByFloorAndStatus(Floor floor, SeatStatus status);

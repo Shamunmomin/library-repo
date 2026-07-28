@@ -3,12 +3,15 @@ package com.lab.library.service;
 import com.lab.library.dto.response.FloorResponse;
 import com.lab.library.entity.Floor;
 import com.lab.library.entity.Library;
+import com.lab.library.entity.Seat;
 import com.lab.library.entity.User;
+import com.lab.library.enums.AllocationStatus;
 import com.lab.library.enums.SubscriptionPackage;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.ResourceNotFoundException;
 import com.lab.library.mapper.FloorMapper;
 import com.lab.library.repository.FloorRepository;
+import com.lab.library.repository.SeatAllocationRepository;
 import com.lab.library.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,7 @@ public class FloorService {
 
     private final FloorRepository floorRepository;
     private final SeatRepository seatRepository;
+    private final SeatAllocationRepository seatAllocationRepository;
     private final UserService userService;
     private final LibraryService libraryService;
     private final SubscriptionService subscriptionService;
@@ -78,8 +82,26 @@ public class FloorService {
     public void delete(UUID floorId) {
         Floor floor = floorRepository.findById(floorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Floor not found", "id", floorId));
+
+        List<Seat> seats = seatRepository.findByFloor(floor);
+
+        for (Seat seat : seats) {
+            if (seatAllocationRepository.existsBySeatAndStatus(seat, AllocationStatus.ACTIVE)) {
+                throw new BadRequestException(
+                        "Cannot delete floor '" + floor.getName() + "': seat " + seat.getSeatNumber()
+                                + " has an active allocation"
+                );
+            }
+        }
+
+        if (!seats.isEmpty()) {
+            List<UUID> seatIds = seats.stream().map(Seat::getId).toList();
+            seatAllocationRepository.deleteBySeatIds(seatIds);
+            seatRepository.deleteAll(seats);
+        }
+
         floorRepository.delete(floor);
-        log.info("Floor deleted: {}", floor.getName());
+        log.info("Floor deleted: {} along with {} seats", floor.getName(), seats.size());
     }
 
     public List<FloorResponse> getByLibrary(UUID userId) {

@@ -57,7 +57,7 @@ export default function OwnerAllocations() {
     } finally { setIsSubmitting(false) }
   }
 
-  async function handleEndAllocation(id: string) {
+  async function  handleEndAllocation(id: string) {
     if (!confirm('End this allocation?')) return
     try {
       await allocationService.endAllocation(id)
@@ -112,8 +112,8 @@ export default function OwnerAllocations() {
             <tbody>
               {allocations.map(a => (
                 <tr key={a.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{a.memberName}</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{a.seatNumber}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{a?.memberName}</td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{a?.seatNumber}</td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{new Date(a.startDate).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
                     <button onClick={() => handleEndAllocation(a.id)} className="px-3 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-medium hover:bg-red-200 transition-colors">
