@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { seatService } from '../../services/seatService'
 import { floorService } from '../../services/floorService'
-import type { Seat, Floor } from '../../types'
+import { memberService } from '../../services/memberService'
+import { allocationService } from '../../services/allocationService'
+import type { Seat, Floor, Member, SeatAllocation } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
@@ -12,6 +14,8 @@ const statusColors: Record<string, string> = {
   MAINTENANCE: 'bg-yellow-100 border-yellow-300 text-yellow-700 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300',
 }
 
+
+
 export default function OwnerSeats() {
   const { floorId } = useParams<{ floorId: string }>()
   const [floor, setFloor] = useState<Floor | null>(null)
@@ -20,17 +24,69 @@ export default function OwnerSeats() {
   const [bulkInput, setBulkInput] = useState('')
   const [showBulk, setShowBulk] = useState(false)
 
+  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
+  const [showAllocate, setShowAllocate] = useState(false)
+  const [members, setMembers] = useState<Member[]>([])
+  const [allocBySeat, setAllocBySeat] = useState<Record<string, SeatAllocation>>({})
+
+  const menuRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+
   useEffect(() => {
     if (!floorId) return
-    Promise.all([
-      floorService.getById(floorId),
-      seatService.getByFloor(floorId),
-    ]).then(([f, s]) => {
+    loadData()
+  }, [floorId])
+
+  async function loadData() {
+    setLoading(true)
+    try {
+      const [f, s, allMembers, activeAllocs] = await Promise.all([
+        floorService.getById(floorId!),
+        seatService.getByFloor(floorId!),
+        memberService.getAll(),
+        allocationService.getActive(),
+      ])
       setFloor(f)
       setSeats(s)
-    }).catch(() => toast.error('Failed to load seats'))
-    .finally(() => setLoading(false))
-  }, [floorId])
+      setMembers(allMembers)
+      const map: Record<string, SeatAllocation> = {}
+      activeAllocs.forEach(a => { map[a.seatId] = a })
+      setAllocBySeat(map)
+    } catch {
+      toast.error('Failed to load seats')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
+        closeMenu()
+      }
+    }
+    if (menuPos) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [menuPos])
+
+  function openMenu(seat: Seat, e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setSelectedSeat(seat)
+    setMenuPos({ top: rect.bottom + 4, left: rect.left })
+    triggerRef.current = e.currentTarget
+  }
+
+  function closeMenu() {
+    setSelectedSeat(null)
+    setMenuPos(null)
+    triggerRef.current = null
+  }
 
   async function addBulk() {
     if (!floorId || !bulkInput.trim()) return
@@ -48,21 +104,53 @@ export default function OwnerSeats() {
     }
   }
 
-  async function toggleStatus(seat: Seat) {
-    const nextStatus = seat.status === 'AVAILABLE' ? 'MAINTENANCE' : 'AVAILABLE'
+  async function handleAllocate(memberId: string) {
+    if (!selectedSeat) return
     try {
-      const updated = await seatService.update(seat.id, { status: nextStatus })
-      setSeats(prev => prev.map(s => s.id === seat.id ? updated : s))
-    } catch { toast.error('Failed to update seat') }
+      await allocationService.allocate(selectedSeat.id, memberId)
+      toast.success(`Seat ${selectedSeat.seatNumber} allocated`)
+      setShowAllocate(false)
+      closeMenu()
+      loadData()
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg || 'Allocation failed')
+    }
   }
 
-  async function deleteSeat(id: string) {
-    if (!confirm('Delete this seat?')) return
+  async function handleUnoccupy() {
+    if (!selectedSeat) return
+    const alloc = allocBySeat[selectedSeat.id]
+    if (!alloc) { toast.error('No active allocation found'); return }
     try {
-      await seatService.delete(id)
-      setSeats(prev => prev.filter(s => s.id !== id))
+      await allocationService.endAllocation(alloc.id)
+      toast.success(`Seat ${selectedSeat.seatNumber} is now available`)
+      closeMenu()
+      loadData()
+    } catch {
+      toast.error('Failed to free seat')
+    }
+  }
+
+  async function handleDelete() {
+    if (!selectedSeat) return
+    if (!confirm(`Delete seat ${selectedSeat.seatNumber}?`)) return
+    try {
+      await seatService.delete(selectedSeat.id)
+      setSeats(prev => prev.filter(s => s.id !== selectedSeat.id))
       toast.success('Seat deleted')
+      closeMenu()
     } catch { toast.error('Failed to delete seat') }
+  }
+
+  async function handleSetStatus(status: string) {
+    if (!selectedSeat) return
+    try {
+      const updated = await seatService.update(selectedSeat.id, { status })
+      setSeats(prev => prev.map(s => s.id === selectedSeat.id ? updated : s))
+      toast.success(`Seat ${selectedSeat.seatNumber} set to ${status}`)
+      closeMenu()
+    } catch { toast.error('Failed to update seat') }
   }
 
   if (loading) return <LoadingSpinner />
@@ -103,25 +191,139 @@ export default function OwnerSeats() {
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
           {seats.map(seat => (
-            <div key={seat.id} className="relative group">
-              <button
-                onClick={() => toggleStatus(seat)}
-                className={`w-full p-2 rounded-lg border text-xs font-medium text-center transition-all cursor-pointer
-                  ${statusColors[seat.status] || 'bg-gray-100 border-gray-200'}
-                  hover:ring-2 hover:ring-primary-400`}
-              >
-                {seat.seatNumber}
-              </button>
-              <button
-                onClick={() => deleteSeat(seat.id)}
-                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                ×
-              </button>
-            </div>
+            <button
+              key={seat.id}
+              onClick={e => openMenu(seat, e)}
+              className={`relative p-3 rounded-lg border text-center transition-all cursor-pointer
+                ${statusColors[seat.status] || 'bg-gray-100 border-gray-200'}
+                hover:ring-2 hover:ring-primary-400`}
+            >
+              <div className="text-xs font-semibold">{seat.seatNumber}</div>
+              <div className="text-[9px] opacity-75 mt-0.5">{seat.status}</div>
+            </button>
           ))}
         </div>
       )}
+
+      {menuPos && selectedSeat && (
+        <div
+          ref={menuRef}
+          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 50 }}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 min-w-[180px]"
+        >
+          <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700">
+            {selectedSeat.seatNumber} — {selectedSeat.status}
+          </div>
+
+          {selectedSeat.status === 'AVAILABLE' && (
+            <button onClick={() => { setShowAllocate(true); setMenuPos(null); triggerRef.current = null }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Allocate to Member
+            </button>
+          )}
+
+          {selectedSeat.status === 'OCCUPIED' && (
+            <button onClick={handleUnoccupy}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Mark as Available
+            </button>
+          )}
+
+          {selectedSeat.status === 'MAINTENANCE' && (
+            <button onClick={() => handleSetStatus('AVAILABLE')}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Set Available
+            </button>
+          )}
+
+          {selectedSeat.status === 'AVAILABLE' && (
+            <button onClick={() => handleSetStatus('MAINTENANCE')}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Set Maintenance
+            </button>
+          )}
+
+          {selectedSeat.status === 'OCCUPIED' && (
+            <button onClick={() => handleSetStatus('MAINTENANCE')}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Set Maintenance
+            </button>
+          )}
+
+          <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+
+          <button onClick={handleDelete}
+            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            Delete Seat
+          </button>
+        </div>
+      )}
+
+      {showAllocate && (
+        <AllocateMemberModal
+          members={members}
+          seatNumber={selectedSeat?.seatNumber || ''}
+          onSelect={handleAllocate}
+          onClose={() => setShowAllocate(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+function AllocateMemberModal({
+  members,
+  seatNumber,
+  onSelect,
+  onClose,
+}: {
+  members: Member[]
+  seatNumber: string
+  onSelect: (memberId: string) => void
+  onClose: () => void
+}) {
+  const [search, setSearch] = useState('')
+
+  const filtered = members.filter(m =>
+    m.name.toLowerCase().includes(search.toLowerCase()) ||
+    m.phone.includes(search)
+  )
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-md max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white">Allocate — Seat {seatNumber}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none">&times;</button>
+        </div>
+
+        <div className="px-4 py-3">
+          <input
+            autoFocus
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or phone..."
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white"
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 pb-3 space-y-1">
+          {filtered.length === 0 ? (
+            <p className="text-center text-sm text-gray-400 py-6">No members found</p>
+          ) : (
+            filtered.map(m => (
+              <button
+                key={m.id}
+                onClick={() => onSelect(m.id)}
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <div className="font-medium text-gray-900 dark:text-white">{m.name}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{m.phone}{m.email ? ` · ${m.email}` : ''}</div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   )
 }
