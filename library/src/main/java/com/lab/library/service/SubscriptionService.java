@@ -108,6 +108,7 @@ public class SubscriptionService {
         }
 
         subscription = subscriptionRepository.save(subscription);
+
         return subscriptionMapper.toResponse(subscription);
     }
 }

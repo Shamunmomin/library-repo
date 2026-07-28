@@ -17,6 +17,7 @@ const OwnerSeats = lazy(() => import('./pages/owner/Seats'))
 const OwnerMembers = lazy(() => import('./pages/owner/Members'))
 const OwnerAllocations = lazy(() => import('./pages/owner/Allocations'))
 const OwnerReports = lazy(() => import('./pages/owner/Reports'))
+const OwnerMemberPayments = lazy(() => import('./pages/owner/MemberPaymentHistory'))
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
 const AdminLibraries = lazy(() => import('./pages/admin/Libraries'))
 const AdminSubscriptions = lazy(() => import('./pages/admin/Subscriptions'))
@@ -73,6 +74,7 @@ export default function App() {
               <Route path="members" element={<OwnerMembers />} />
               <Route path="allocations" element={<OwnerAllocations />} />
               <Route path="reports" element={<OwnerReports />} />
+              <Route path="members/:memberId/payments" element={<OwnerMemberPayments />} />
             </Route>
 
             <Route

@@ -1,5 +1,5 @@
 import api from './axios'
-import type { Member } from '../types'
+import type { Member, MemberPayment } from '../types'
 
 export const memberService = {
   async getAll() {
@@ -38,6 +38,11 @@ export const memberService = {
 
   async getFeeExpired() {
     const response = await api.get<Member[]>('/members/fee-expired')
+    return response.data
+  },
+
+  async getMemberPayments(id: string) {
+    const response = await api.get<MemberPayment[]>(`/members/${id}/payments`)
     return response.data
   },
 

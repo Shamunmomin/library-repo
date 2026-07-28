@@ -269,6 +269,12 @@ export default function OwnerDashboard() {
                 Close
               </button>
               <button
+                onClick={() => { setSelectedMember(null); navigate(`/owner/members/${selectedMember.id}/payments`) }}
+                className="px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 transition-colors"
+              >
+                View History
+              </button>
+              <button
                 onClick={() => handleMarkPaid(selectedMember.id)}
                 disabled={payingMember === selectedMember.id}
                 className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"

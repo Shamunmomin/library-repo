@@ -78,6 +78,15 @@ export interface Seat {
 
 export type FeeStatus = 'PAID' | 'UNPAID' | 'PARTIAL'
 
+export interface MemberPayment {
+  id: string
+  memberId: string
+  amount: number
+  paidUpTo: string
+  paymentDate: string
+  createdAt: string
+}
+
 export interface Member {
   id: string
   libraryId: string

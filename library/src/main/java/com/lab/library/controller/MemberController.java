@@ -1,5 +1,6 @@
 package com.lab.library.controller;
 
+import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
 import com.lab.library.enums.FeeStatus;
 import com.lab.library.service.MemberService;
@@ -97,6 +98,11 @@ public class MemberController {
     public ResponseEntity<List<MemberResponse>> getFeeExpired() {
         UUID userId = userService.getCurrentUserId();
         return ResponseEntity.ok(memberService.getExpiredFeeMembers(userId));
+    }
+
+    @GetMapping("/{id}/payments")
+    public ResponseEntity<List<MemberPaymentResponse>> getMemberPayments(@PathVariable UUID id) {
+        return ResponseEntity.ok(memberService.getMemberPayments(id));
     }
 
     private String saveFile(MultipartFile file, String subDir) throws IOException {

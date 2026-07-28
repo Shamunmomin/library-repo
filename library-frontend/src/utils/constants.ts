@@ -12,6 +12,7 @@ export const ROUTES = {
   OWNER_MEMBERS: '/owner/members',
   OWNER_ALLOCATIONS: '/owner/allocations',
   OWNER_REPORTS: '/owner/reports',
+  OWNER_MEMBER_PAYMENTS: '/owner/members/:memberId/payments',
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_LIBRARIES: '/admin/libraries',
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',

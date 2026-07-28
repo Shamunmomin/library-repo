@@ -1,14 +1,17 @@
 package com.lab.library.service;
 
+import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
 import com.lab.library.entity.Library;
 import com.lab.library.entity.Member;
+import com.lab.library.entity.MemberPayment;
 import com.lab.library.entity.User;
 import com.lab.library.enums.AllocationStatus;
 import com.lab.library.enums.FeeStatus;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.ResourceNotFoundException;
 import com.lab.library.mapper.MemberMapper;
+import com.lab.library.repository.MemberPaymentRepository;
 import com.lab.library.repository.MemberRepository;
 import com.lab.library.repository.SeatAllocationRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,6 +32,7 @@ import java.util.stream.Collectors;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final MemberPaymentRepository memberPaymentRepository;
     private final SeatAllocationRepository seatAllocationRepository;
     private final UserService userService;
     private final LibraryService libraryService;
@@ -90,15 +95,39 @@ public class MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
 
         LocalDate today = LocalDate.now();
+        LocalDate newPaidUpTo;
         if (member.getPaidUpTo() == null || member.getPaidUpTo().isBefore(today)) {
-            member.setPaidUpTo(today.plusMonths(1));
+            newPaidUpTo = today.plusMonths(1);
         } else {
-            member.setPaidUpTo(member.getPaidUpTo().plusMonths(1));
+            newPaidUpTo = member.getPaidUpTo().plusMonths(1);
         }
+        member.setPaidUpTo(newPaidUpTo);
         member.setFeeStatus(FeeStatus.PAID);
         member = memberRepository.save(member);
-        log.info("Member fee marked paid: {}, paid up to {}", member.getName(), member.getPaidUpTo());
+
+        MemberPayment payment = MemberPayment.builder()
+                .member(member)
+                .amount(member.getFeeAmount())
+                .paidUpTo(newPaidUpTo)
+                .paymentDate(LocalDateTime.now())
+                .build();
+        memberPaymentRepository.save(payment);
+
+        log.info("Member fee marked paid: {}, paid up to {}", member.getName(), newPaidUpTo);
         return buildResponse(member);
+    }
+
+    public List<MemberPaymentResponse> getMemberPayments(UUID memberId) {
+        return memberPaymentRepository.findByMemberIdOrderByPaymentDateDesc(memberId).stream()
+                .map(p -> MemberPaymentResponse.builder()
+                        .id(p.getId().toString())
+                        .memberId(p.getMember().getId().toString())
+                        .amount(p.getAmount())
+                        .paidUpTo(p.getPaidUpTo())
+                        .paymentDate(p.getPaymentDate())
+                        .createdAt(p.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public List<MemberResponse> getExpiredFeeMembers(UUID userId) {
