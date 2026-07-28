@@ -44,6 +44,11 @@ public class SeatAllocationService {
             throw new BadRequestException("Seat " + seat.getSeatNumber() + " already has an active allocation");
         }
 
+        boolean alreadyAllocatedByMemberId = seatAllocationRepository.existsByMemberIdAndStatus(member.getId(), AllocationStatus.ACTIVE);
+        if (alreadyAllocatedByMemberId) {
+            throw new BadRequestException("Seat " + seat.getSeatNumber() + " already assigned to member " + member.getName() + " with an active allocation");
+        }
+
         SeatAllocation allocation = SeatAllocation.builder()
                 .seat(seat)
                 .member(member)

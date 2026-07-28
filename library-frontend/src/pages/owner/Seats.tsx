@@ -29,6 +29,7 @@ export default function OwnerSeats() {
   const [showAllocate, setShowAllocate] = useState(false)
   const [members, setMembers] = useState<Member[]>([])
   const [allocBySeat, setAllocBySeat] = useState<Record<string, SeatAllocation>>({})
+  const [allocByMember, setAllocByMember] = useState<Record<string, SeatAllocation>>({})
 
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
@@ -51,9 +52,11 @@ export default function OwnerSeats() {
       setFloor(f)
       setSeats(s)
       setMembers(allMembers)
-      const map: Record<string, SeatAllocation> = {}
-      activeAllocs.forEach(a => { map[a.seatId] = a })
-      setAllocBySeat(map)
+      const seatMap: Record<string, SeatAllocation> = {}
+      const memberMap: Record<string, SeatAllocation> = {}
+      activeAllocs.forEach(a => { seatMap[a.seatId] = a; memberMap[a.memberId] = a })
+      setAllocBySeat(seatMap)
+      setAllocByMember(memberMap)
     } catch {
       toast.error('Failed to load seats')
     } finally {
@@ -127,6 +130,16 @@ export default function OwnerSeats() {
 
   async function handleAllocate(memberId: string) {
     if (!selectedSeat) return
+    const existing = allocByMember[memberId]
+    if (existing) {
+      const member = members.find(m => m.id === memberId)
+      const occupiedSeat = seats.find(s => s.id === existing.seatId)
+      toast(
+        `${member?.name || 'Member'} already occupies seat ${occupiedSeat?.seatNumber || existing.seatId}`,
+        { style: { background: '#dc2626', color: '#fff', fontSize: '14px' } }
+      )
+      return
+    }
     try {
       await allocationService.allocate(selectedSeat.id, memberId)
       toast.success(`Seat ${selectedSeat.seatNumber} allocated`)
@@ -213,7 +226,7 @@ export default function OwnerSeats() {
 
       {addMode === 'bulk' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter seat numbers separated by commas:</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter Multiple seat numbers separated by commas:</p>
           <div className="flex gap-2">
             <input value={bulkInput} onChange={e => setBulkInput(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="A1, A2, A3, B1, B2" />
             <button onClick={addBulk} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium">Add</button>
