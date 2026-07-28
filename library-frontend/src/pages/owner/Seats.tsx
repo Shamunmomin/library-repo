@@ -14,15 +14,15 @@ const statusColors: Record<string, string> = {
   MAINTENANCE: 'bg-yellow-100 border-yellow-300 text-yellow-700 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300',
 }
 
-
-
 export default function OwnerSeats() {
   const { floorId } = useParams<{ floorId: string }>()
   const [floor, setFloor] = useState<Floor | null>(null)
   const [seats, setSeats] = useState<Seat[]>([])
   const [loading, setLoading] = useState(true)
+  const [addMode, setAddMode] = useState<'bulk' | 'single' | null>(null)
+  const [showAddMenu, setShowAddMenu] = useState(false)
   const [bulkInput, setBulkInput] = useState('')
-  const [showBulk, setShowBulk] = useState(false)
+  const [singleInput, setSingleInput] = useState('')
 
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
@@ -32,6 +32,7 @@ export default function OwnerSeats() {
 
   const menuRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const addMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!floorId) return
@@ -70,10 +71,16 @@ export default function OwnerSeats() {
       ) {
         closeMenu()
       }
+      if (
+        addMenuRef.current &&
+        !addMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowAddMenu(false)
+      }
     }
-    if (menuPos) document.addEventListener('mousedown', handleClick)
+    if (menuPos || showAddMenu) document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
-  }, [menuPos])
+  }, [menuPos, showAddMenu])
 
   function openMenu(seat: Seat, e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -96,11 +103,25 @@ export default function OwnerSeats() {
       const created = await seatService.createBulk(floorId, numbers)
       setSeats(prev => [...prev, ...created])
       setBulkInput('')
-      setShowBulk(false)
+      // setAddMode(null)
       toast.success(`${created.length} seats added`)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       toast.error(msg || 'Failed to add seats')
+    }
+  }
+
+  async function addSingle() {
+    if (!floorId || !singleInput.trim()) return
+    try {
+      const created = await seatService.create(floorId, singleInput.trim())
+      setSeats(prev => [...prev, created])
+      setSingleInput('')
+      setAddMode(null)
+      toast.success('Seat added')
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg || 'Failed to add seat')
     }
   }
 
@@ -164,9 +185,24 @@ export default function OwnerSeats() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {floor?.name || 'Seats'}
         </h1>
-        <button onClick={() => setShowBulk(!showBulk)} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors">
-          + Add Seats
-        </button>
+        <div className="relative">
+          <button onClick={() => setShowAddMenu(!showAddMenu)} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors">
+            + Add Seats
+          </button>
+
+          {showAddMenu && (
+            <div ref={addMenuRef} className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 min-w-[160px] z-40">
+              <button onClick={() => { setAddMode('bulk'); setShowAddMenu(false) }}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Add Bulk
+              </button>
+              <button onClick={() => { setAddMode('single'); setShowAddMenu(false) }}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Add Single
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6 text-sm">
@@ -175,13 +211,24 @@ export default function OwnerSeats() {
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500" /> Maintenance: {counts.MAINTENANCE}</span>
       </div>
 
-      {showBulk && (
+      {addMode === 'bulk' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter seat numbers separated by commas:</p>
           <div className="flex gap-2">
             <input value={bulkInput} onChange={e => setBulkInput(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="A1, A2, A3, B1, B2" />
             <button onClick={addBulk} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium">Add</button>
-            <button onClick={() => setShowBulk(false)} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">Cancel</button>
+            <button onClick={() => { setAddMode(null); setBulkInput('') }} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {addMode === 'single' && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter seat number:</p>
+          <div className="flex gap-2">
+            <input value={singleInput} onChange={e => setSingleInput(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="e.g. A1" />
+            <button onClick={addSingle} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium">Add</button>
+            <button onClick={() => { setAddMode(null); setSingleInput('') }} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">Cancel</button>
           </div>
         </div>
       )}
@@ -194,7 +241,7 @@ export default function OwnerSeats() {
             <button
               key={seat.id}
               onClick={e => openMenu(seat, e)}
-              className={`relative p-3 rounded-lg border text-center transition-all cursor-pointer
+              className={`relative p-5 rounded-lg border text-center transition-all cursor-pointer
                 ${statusColors[seat.status] || 'bg-gray-100 border-gray-200'}
                 hover:ring-2 hover:ring-primary-400`}
             >
