@@ -1,19 +1,23 @@
 package com.lab.library.service;
 
 import com.lab.library.dto.response.SubscriptionResponse;
+import com.lab.library.entity.Payment;
 import com.lab.library.entity.Subscription;
 import com.lab.library.entity.User;
+import com.lab.library.enums.PaymentStatus;
 import com.lab.library.enums.SubscriptionPackage;
 import com.lab.library.enums.SubscriptionStatus;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.ResourceNotFoundException;
 import com.lab.library.mapper.SubscriptionMapper;
+import com.lab.library.repository.PaymentRepository;
 import com.lab.library.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +29,7 @@ import java.util.stream.Collectors;
 public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
+    private final PaymentRepository paymentRepository;
     private final UserService userService;
     private final SubscriptionMapper subscriptionMapper;
 
@@ -101,7 +106,20 @@ public class SubscriptionService {
         if (newStatus == SubscriptionStatus.ACTIVE) {
             subscription.setStartDate(LocalDateTime.now());
             subscription.setEndDate(LocalDateTime.now().plusMonths(1));
-            log.info("Subscription {} activated for user: {}", id, subscription.getUser().getEmail());
+
+            BigDecimal amount = subscription.getPackageType() == SubscriptionPackage.PRO
+                    ? new BigDecimal("999") : new BigDecimal("499");
+
+            Payment payment = Payment.builder()
+                    .user(subscription.getUser())
+                    .amount(amount)
+                    .paymentDate(LocalDateTime.now())
+                    .paymentMethod("screenshot")
+                    .status(PaymentStatus.COMPLETED)
+                    .build();
+            paymentRepository.save(payment);
+
+            log.info("Subscription {} activated for user: {}, payment recorded: {}", id, subscription.getUser().getEmail(), payment.getId());
         } else if (newStatus == SubscriptionStatus.REJECTED) {
             subscription.setRejectionReason(rejectionReason);
             log.info("Subscription {} rejected for user: {}. Reason: {}", id, subscription.getUser().getEmail(), rejectionReason);
