@@ -219,9 +219,9 @@ export default function OwnerSeats() {
       </div>
 
       <div className="flex gap-4 mb-6 text-sm">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500" /> Available: {counts.AVAILABLE}</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500" /> Occupied: {counts.OCCUPIED}</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500" /> Maintenance: {counts.MAINTENANCE}</span>
+        <span className="flex items-center gap-1 text-md text-gray-900 dark:text-white"><span className="w-3 h-3 rounded-full bg-green-500" /> Available: {counts.AVAILABLE}</span>
+        <span className="flex items-center gap-1 text-md text-gray-900 dark:text-white"><span className="w-3 h-3 rounded-full bg-red-500" /> Occupied: {counts.OCCUPIED}</span>
+        <span className="flex items-center gap-1 text-md text-gray-900 dark:text-white"><span className="w-3 h-3 rounded-full bg-yellow-500" /> Maintenance: {counts.MAINTENANCE}</span>
       </div>
 
       {addMode === 'bulk' && (
