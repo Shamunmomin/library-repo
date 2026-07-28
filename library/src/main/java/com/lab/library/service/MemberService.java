@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,9 +35,12 @@ public class MemberService {
 
     @Transactional
     public MemberResponse create(UUID userId, String name, String email, String phone,
-                                  String address, BigDecimal feeAmount, String photoPath) {
+                                  String address, BigDecimal feeAmount, String photoPath,
+                                  String joinDateStr) {
         User user = userService.getById(userId);
         Library library = libraryService.getLibraryByUser(user);
+
+        LocalDate joinDate =  LocalDate.parse(joinDateStr);
 
         Member member = Member.builder()
                 .library(library)
@@ -47,6 +51,7 @@ public class MemberService {
                 .feeAmount(feeAmount)
                 .feeStatus(FeeStatus.UNPAID)
                 .photo(photoPath)
+                .joinDate(joinDate)
                 .build();
 
         member = memberRepository.save(member);

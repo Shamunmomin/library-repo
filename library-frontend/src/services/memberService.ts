@@ -12,7 +12,7 @@ export const memberService = {
     return response.data
   },
 
-  async create(data: { name: string; email?: string; phone: string; address?: string; feeAmount?: number; photo?: File }) {
+  async create(data: { name: string; email?: string; phone: string; address?: string; feeAmount?: number; photo?: File; joinDate?: string }) {
     const formData = new FormData()
     formData.append('name', data.name)
     formData.append('phone', data.phone)
@@ -20,6 +20,7 @@ export const memberService = {
     if (data.address) formData.append('address', data.address)
     if (data.feeAmount) formData.append('feeAmount', String(data.feeAmount))
     if (data.photo) formData.append('photo', data.photo)
+    if (data.joinDate) formData.append('joinDate', data.joinDate)
     const response = await api.post<Member>('/members', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })

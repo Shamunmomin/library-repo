@@ -83,7 +83,7 @@ export default function Register() {
 
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-            <input id="phone" type="tel" value={phone} onChange={e => { setPhone(e.target.value); setErrors(prev => ({ ...prev, phone: undefined })) }} className={fieldClass('phone')} placeholder="+1 234 567 890" />
+            <input id="phone" type="tel" value={phone} onChange={e => { setPhone(e.target.value); setErrors(prev => ({ ...prev, phone: undefined })) }} className={fieldClass('phone')} placeholder="+1 234 567 890" maxLength={10} />
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
 

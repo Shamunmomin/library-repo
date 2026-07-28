@@ -12,7 +12,7 @@ export default function OwnerMembers() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'ALL' | 'PAID' | 'UNPAID'>('ALL')
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', feeAmount: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', feeAmount: '', joinDate: '' })
   const [photo, setPhoto] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -28,12 +28,12 @@ export default function OwnerMembers() {
   }
 
   function resetForm() {
-    setForm({ name: '', email: '', phone: '', address: '', feeAmount: '' })
+    setForm({ name: '', email: '', phone: '', address: '', feeAmount: '', joinDate: '' })
     setPhoto(null); setEditId(null); setShowForm(false)
   }
 
   function startEdit(m: Member) {
-    setForm({ name: m.name, email: m.email || '', phone: m.phone, address: m.address || '', feeAmount: String(m.feeAmount || '') })
+    setForm({ name: m.name, email: m.email || '', phone: m.phone, address: m.address || '', feeAmount: String(m.feeAmount || ''), joinDate: m.joinDate || '' })
     setEditId(m.id); setShowForm(true)
   }
 
@@ -51,6 +51,7 @@ export default function OwnerMembers() {
           phone: form.phone.trim(), address: form.address.trim() || undefined,
           feeAmount: form.feeAmount ? Number(form.feeAmount) : undefined,
           photo: photo || undefined,
+          joinDate: form.joinDate || undefined,
         })
         toast.success('Member added')
       }
@@ -110,8 +111,9 @@ export default function OwnerMembers() {
           <div className="grid grid-cols-2 gap-3">
             <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="col-span-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Full name *" />
             <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Email" />
-            <input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Phone *" />
+            <input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Phone *" maxLength={10} />
             <input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} className="col-span-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Address" />
+            <input value={form.joinDate} onChange={e => setForm(p => ({ ...p, joinDate: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" type="date" />
             <input value={form.feeAmount} onChange={e => setForm(p => ({ ...p, feeAmount: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Monthly fee" type="number" />
             {!editId && <input type="file" accept="image/*" onChange={e => setPhoto(e.target.files?.[0] || null)} className="text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary-50 dark:file:bg-primary-900/30 file:text-primary-700 cursor-pointer" />}
           </div>

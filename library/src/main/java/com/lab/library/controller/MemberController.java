@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,13 +38,14 @@ public class MemberController {
             @RequestParam("phone") String phone,
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "feeAmount", required = false) BigDecimal feeAmount,
-            @RequestParam(value = "photo", required = false) MultipartFile photo) throws IOException {
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "joinDate", required = true) String joinDate) throws IOException {
 
         UUID userId = userService.getCurrentUserId();
         String photoPath = photo != null ? saveFile(photo, "photos") : null;
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(memberService.create(userId, name, email, phone, address, feeAmount, photoPath));
+                .body(memberService.create(userId, name, email, phone, address, feeAmount, photoPath, joinDate));
     }
 
     @PutMapping("/{id}")
