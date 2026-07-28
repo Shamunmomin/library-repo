@@ -34,7 +34,6 @@ public class SeatService {
 
     @Transactional
     public List<SeatResponse> createBulk(UUID userId, UUID floorId, List<String> seatNumbers) {
-        User user = userService.getById(userId);
         Floor floor = floorService.getFloorEntity(floorId);
         Library library = floor.getLibrary();
 
@@ -46,6 +45,12 @@ public class SeatService {
         long totalSeats = seatRepository.countAllByFloorLibrary(library);
         if (pkg == SubscriptionPackage.BASE && (totalSeats + seatNumbers.size()) > 100) {
             throw new BadRequestException("Base plan allows max 100 seats");
+        }
+
+        for (String seatNum : seatNumbers) {
+            if (!seatNum.matches("\\d+")) {
+                throw new BadRequestException("Seat number must be numeric: " + seatNum);
+            }
         }
 
         List<Seat> saved = new ArrayList<>();

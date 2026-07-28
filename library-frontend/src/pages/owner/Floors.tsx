@@ -87,12 +87,12 @@ export default function OwnerFloors() {
           {floors.map(floor => (
             <div key={floor.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">{floor.name}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{floor.seatCount} seats</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white"> Floor - {floor.name}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{floor.description}</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => navigate(`/owner/floors/${floor.id}/seats`)} className="px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs font-medium hover:bg-primary-100 transition-colors">
-                  Seats
+                  Manage Seats
                 </button>
                 <button onClick={() => startEdit(floor)} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium hover:bg-gray-200 transition-colors">
                   Edit

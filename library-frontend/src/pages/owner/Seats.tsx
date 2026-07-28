@@ -21,7 +21,8 @@ export default function OwnerSeats() {
   const [loading, setLoading] = useState(true)
   const [addMode, setAddMode] = useState<'bulk' | 'single' | null>(null)
   const [showAddMenu, setShowAddMenu] = useState(false)
-  const [bulkInput, setBulkInput] = useState('')
+  const [bulkCount, setBulkCount] = useState('')
+  const [bulkError, setBulkError] = useState<string | null>(null)
   const [singleInput, setSingleInput] = useState('')
 
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null)
@@ -98,15 +99,32 @@ export default function OwnerSeats() {
     triggerRef.current = null
   }
 
+  function getNextSeatStart(): number {
+    const nums = seats.map(s => Number(s.seatNumber)).filter(n => !isNaN(n))
+    return nums.length > 0 ? Math.max(...nums) + 1 : 1
+  }
+
   async function addBulk() {
-    if (!floorId || !bulkInput.trim()) return
-    const numbers = bulkInput.split(',').map(s => s.trim()).filter(Boolean)
-    if (numbers.length === 0) { toast.error('Enter at least one seat number'); return }
+    setBulkError(null)
+    const count = parseInt(bulkCount, 10)
+    if (!/^\d+$/.test(bulkCount) || count < 1) {
+      setBulkError('Only numbers are allowed')
+      return
+    }
+    if (count > 100) {
+      setBulkError('Maximum 100 seats allowed at a time')
+      return
+    }
+    if (!floorId) return
+    const start = getNextSeatStart()
+    const seatNumbers: string[] = []
+    for (let i = 0; i < count; i++) {
+      seatNumbers.push(String(start + i))
+    }
     try {
-      const created = await seatService.createBulk(floorId, numbers)
+      const created = await seatService.createBulk(floorId, seatNumbers)
       setSeats(prev => [...prev, ...created])
-      setBulkInput('')
-      // setAddMode(null)
+      setBulkCount('')
       toast.success(`${created.length} seats added`)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -226,12 +244,22 @@ export default function OwnerSeats() {
 
       {addMode === 'bulk' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter Multiple seat numbers separated by commas:</p>
-          <div className="flex gap-2">
-            <input value={bulkInput} onChange={e => setBulkInput(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="A1, A2, A3, B1, B2" />
-            <button onClick={addBulk} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium">Add</button>
-            <button onClick={() => { setAddMode(null); setBulkInput('') }} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">Cancel</button>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Number of seats to add</p>
+          <div className="flex gap-2 items-start">
+            <div className="w-40 space-y-1">
+              <input
+                value={bulkCount}
+                onChange={e => { setBulkCount(e.target.value.replace(/\D/g, '')); setBulkError(null) }}
+                className={`w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${bulkError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                placeholder="e.g. 50"
+                maxLength={3}
+              />
+              {bulkError && <p className="text-xs text-red-500">{bulkError}</p>}
+            </div>
+            <button onClick={addBulk} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium whitespace-nowrap">Add</button>
+            <button onClick={() => { setAddMode(null); setBulkCount(''); setBulkError(null) }} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">Cancel</button>
           </div>
+          <p className="text-xs text-gray-400 mt-2">Seats will be numbered sequentially starting from the next available number. Max 100 at a time.</p>
         </div>
       )}
 
@@ -250,7 +278,7 @@ export default function OwnerSeats() {
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No seats yet. Add seats to this floor.</div>
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-          {seats.map(seat => (
+          {[...seats].sort((a, b) => Number(a.seatNumber) - Number(b.seatNumber)).map(seat => (
             <button
               key={seat.id}
               onClick={e => openMenu(seat, e)}

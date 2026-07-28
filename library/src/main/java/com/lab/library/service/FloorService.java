@@ -77,7 +77,7 @@ public class FloorService {
     @Transactional
     public void delete(UUID floorId) {
         Floor floor = floorRepository.findById(floorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Floor", "id", floorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Floor not found", "id", floorId));
         floorRepository.delete(floor);
         log.info("Floor deleted: {}", floor.getName());
     }
