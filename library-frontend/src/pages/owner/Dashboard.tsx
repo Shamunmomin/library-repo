@@ -6,6 +6,7 @@ import { subscriptionService } from '../../services/subscriptionService'
 import type { OwnerDashboardStats, Member, Subscription } from '../../types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { SkeletonCard, SkeletonChart } from '../../components/Skeleton'
+import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
 
 const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b']
@@ -208,13 +209,15 @@ export default function OwnerDashboard() {
             </div>
 
             <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-              {selectedMember.photo ? (
-                <img src={selectedMember.photo} alt="" className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-lg">
-                  {selectedMember.name.charAt(0)}
-                </div>
-              )}
+              <ProtectedImage
+                src={selectedMember.photo}
+                className="w-12 h-12 rounded-full object-cover"
+                fallback={
+                  <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-lg">
+                    {selectedMember.name.charAt(0)}
+                  </div>
+                }
+              />
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">{selectedMember.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{selectedMember.phone}</p>

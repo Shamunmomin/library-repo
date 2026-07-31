@@ -1,14 +1,17 @@
 package com.lab.library.service;
 
+import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.SubscriptionResponse;
 import com.lab.library.entity.Payment;
 import com.lab.library.entity.Subscription;
 import com.lab.library.entity.User;
 import com.lab.library.enums.PaymentStatus;
+import com.lab.library.enums.Role;
 import com.lab.library.enums.SubscriptionPackage;
 import com.lab.library.enums.SubscriptionStatus;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.ResourceNotFoundException;
+import com.lab.library.exception.UnauthorizedException;
 import com.lab.library.mapper.SubscriptionMapper;
 import com.lab.library.repository.PaymentRepository;
 import com.lab.library.repository.SubscriptionRepository;
@@ -32,6 +35,7 @@ public class SubscriptionService {
     private final PaymentRepository paymentRepository;
     private final UserService userService;
     private final SubscriptionMapper subscriptionMapper;
+    private final ImageStorageService imageStorageService;
 
     public SubscriptionPackage getUserActivePackage(UUID userId) {
         User user = userService.getById(userId);
@@ -42,7 +46,7 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public SubscriptionResponse create(UUID userId, SubscriptionPackage packageType, String screenshotPath) {
+    public SubscriptionResponse create(UUID userId, SubscriptionPackage packageType, StoredImage screenshot) {
         User user = userService.getById(userId);
 
         boolean hasActive = subscriptionRepository.existsByUserAndStatus(user, SubscriptionStatus.ACTIVE);
@@ -59,7 +63,10 @@ public class SubscriptionService {
                 .user(user)
                 .packageType(packageType)
                 .status(SubscriptionStatus.PENDING)
-                .paymentScreenshot(screenshotPath)
+                .paymentScreenshot("/uploads/subscriptions/" + screenshot.fileName())
+                .screenshotData(screenshot.data())
+                .screenshotContentType(screenshot.contentType())
+                .screenshotFileName(screenshot.fileName())
                 .build();
 
         subscription = subscriptionRepository.save(subscription);
@@ -78,6 +85,21 @@ public class SubscriptionService {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription", "id", id));
         return subscriptionMapper.toResponse(subscription);
+    }
+
+    @Transactional(readOnly = true)
+    public StoredImage getSubscriptionScreenshot(UUID id) {
+        Subscription subscription = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription", "id", id));
+        User currentUser = userService.getCurrentUser();
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        if (!isAdmin && !subscription.getUser().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedException("You are not allowed to view this payment screenshot");
+        }
+        if (subscription.getScreenshotData() != null) {
+            return new StoredImage(subscription.getScreenshotData(), subscription.getScreenshotContentType(), subscription.getScreenshotFileName());
+        }
+        return imageStorageService.readFromDisk(subscription.getPaymentScreenshot());
     }
 
     public List<SubscriptionResponse> getAllSubscriptions() {

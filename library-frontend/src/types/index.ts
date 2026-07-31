@@ -40,7 +40,7 @@ export interface Subscription {
   userEmail?: string
   packageType: SubscriptionPackage
   status: SubscriptionStatus
-  paymentScreenshot: string
+  paymentScreenshot: string | null
   rejectionReason?: string
   startDate: string | null
   endDate: string | null
@@ -53,7 +53,7 @@ export interface Library {
   name: string
   address: string
   phone: string
-  icon: string
+  icon: string | null
   createdAt: string
 }
 
@@ -94,7 +94,7 @@ export interface Member {
   email: string
   phone: string
   address: string
-  photo: string
+  photo: string | null
   joinDate: string
   paidUpTo?: string
   feeAmount: number
@@ -164,7 +164,7 @@ export interface LibraryDetail {
   name: string
   address: string
   phone: string
-  icon: string
+  icon: string | null
   subscriptionPackage: string
   subscriptionStatus: string
   floorCount: number

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { libraryService } from '../../services/libraryService'
 import type { Library } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
 
 export default function OwnerLibrary() {
@@ -46,9 +47,7 @@ export default function OwnerLibrary() {
       <div className="max-w-lg mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">My Library</h1>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          {library.icon && (
-            <img src={library.icon} alt="Library" className="w-20 h-20 rounded-xl object-cover mb-4" />
-          )}
+          <ProtectedImage src={library.icon} alt="Library" className="w-20 h-20 rounded-xl object-cover mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{library.name}</h2>
           <div className="space-y-1 text-sm text-gray-500 dark:text-gray-400">
             <p>📍 {library.address}</p>

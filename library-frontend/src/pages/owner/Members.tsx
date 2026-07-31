@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { memberService } from '../../services/memberService'
 import type { Member } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
 
 export default function OwnerMembers() {
@@ -146,7 +147,7 @@ export default function OwnerMembers() {
                 <tr key={m.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {m.photo && <img src={m.photo} alt="" className="w-8 h-8 rounded-full object-cover" />}
+                      <ProtectedImage src={m.photo} className="w-8 h-8 rounded-full object-cover" />
                       <span className="font-medium text-gray-900 dark:text-white">{m.name}</span>
                     </div>
                   </td>

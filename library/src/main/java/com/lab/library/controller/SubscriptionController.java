@@ -1,11 +1,14 @@
 package com.lab.library.controller;
 
+import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.SubscriptionResponse;
 import com.lab.library.enums.SubscriptionPackage;
+import com.lab.library.service.ImageStorageService;
 import com.lab.library.service.SubscriptionService;
 import com.lab.library.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.UUID;
 
 @Slf4j
@@ -26,6 +27,7 @@ public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
     private final UserService userService;
+    private final ImageStorageService imageStorageService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SubscriptionResponse> create(
@@ -33,11 +35,11 @@ public class SubscriptionController {
             @RequestParam("screenshot") MultipartFile screenshot) throws IOException {
 
         UUID userId = userService.getCurrentUserId();
-        String screenshotPath = saveFile(screenshot, "subscriptions");
+        StoredImage storedScreenshot = imageStorageService.save(screenshot, "subscriptions");
         SubscriptionPackage pkg = SubscriptionPackage.valueOf(packageType.toUpperCase());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(subscriptionService.create(userId, pkg, screenshotPath));
+                .body(subscriptionService.create(userId, pkg, storedScreenshot));
     }
 
     @GetMapping("/my")
@@ -55,15 +57,19 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.getById(id));
     }
 
-    private String saveFile(MultipartFile file, String subDir) throws IOException {
-        String uploadDir = System.getProperty("user.dir") + "/uploads/" + subDir;
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+    @GetMapping("/{id}/screenshot")
+    public ResponseEntity<byte[]> getScreenshot(@PathVariable UUID id) {
+        StoredImage image = subscriptionService.getSubscriptionScreenshot(id);
+        return buildImageResponse(image);
+    }
+
+    private ResponseEntity<byte[]> buildImageResponse(StoredImage image) {
+        if (image == null) {
+            return ResponseEntity.notFound().build();
         }
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath);
-        return "/uploads/" + subDir + "/" + fileName;
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(image.contentType()))
+                .cacheControl(CacheControl.noCache())
+                .body(image.data());
     }
 }

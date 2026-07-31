@@ -1,10 +1,13 @@
 package com.lab.library.controller;
 
+import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.LibraryResponse;
+import com.lab.library.service.ImageStorageService;
 import com.lab.library.service.LibraryService;
 import com.lab.library.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.UUID;
 
 @Slf4j
@@ -25,6 +26,7 @@ public class LibraryController {
 
     private final LibraryService libraryService;
     private final UserService userService;
+    private final ImageStorageService imageStorageService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<LibraryResponse> create(
@@ -34,10 +36,10 @@ public class LibraryController {
             @RequestParam(value = "icon", required = false) MultipartFile icon) throws IOException {
 
         UUID userId = userService.getCurrentUserId();
-        String iconPath = icon != null ? saveFile(icon, "icons") : null;
+        StoredImage storedIcon = icon != null ? imageStorageService.save(icon, "icons") : null;
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(libraryService.create(userId, name, address, phone, iconPath));
+                .body(libraryService.create(userId, name, address, phone, storedIcon));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -48,8 +50,8 @@ public class LibraryController {
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "icon", required = false) MultipartFile icon) throws IOException {
 
-        String iconPath = icon != null ? saveFile(icon, "icons") : null;
-        return ResponseEntity.ok(libraryService.update(id, name, address, phone, iconPath));
+        StoredImage storedIcon = icon != null ? imageStorageService.save(icon, "icons") : null;
+        return ResponseEntity.ok(libraryService.update(id, name, address, phone, storedIcon));
     }
 
     @GetMapping("/my")
@@ -67,14 +69,19 @@ public class LibraryController {
         return ResponseEntity.ok(libraryService.getById(id));
     }
 
-    private String saveFile(MultipartFile file, String subDir) throws IOException {
-        String uploadDir = System.getProperty("user.dir") + "/uploads/" + subDir;
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+    @GetMapping("/{id}/icon")
+    public ResponseEntity<byte[]> getIcon(@PathVariable UUID id) {
+        StoredImage image = libraryService.getLibraryIcon(id);
+        return buildImageResponse(image);
+    }
+
+    private ResponseEntity<byte[]> buildImageResponse(StoredImage image) {
+        if (image == null) {
+            return ResponseEntity.notFound().build();
         }
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-        return "/uploads/" + subDir + "/" + fileName;
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(image.contentType()))
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                .body(image.data());
     }
 }

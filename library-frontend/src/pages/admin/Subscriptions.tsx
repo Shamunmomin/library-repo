@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminService } from '../../services/adminService'
+import { openImageInNewTab } from '../../services/imageService'
 import type { Subscription } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
@@ -99,14 +100,12 @@ export default function AdminSubscriptions() {
                   </td>
                   <td className="px-4 py-3">
                     {sub.paymentScreenshot ? (
-                      <a
-                        href={sub.paymentScreenshot}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        onClick={() => sub.paymentScreenshot && openImageInNewTab(sub.paymentScreenshot)}
                         className="text-primary-600 hover:underline text-xs"
                       >
                         View Screenshot
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-gray-400">N/A</span>
                     )}

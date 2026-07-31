@@ -35,6 +35,15 @@ public class Library {
 
     private String icon;
 
+    @Column(name = "icon_data")
+    private byte[] iconData;
+
+    @Column(name = "icon_content_type")
+    private String iconContentType;
+
+    @Column(name = "icon_file_name")
+    private String iconFileName;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

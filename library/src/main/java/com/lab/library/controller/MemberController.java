@@ -1,8 +1,10 @@
 package com.lab.library.controller;
 
+import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
 import com.lab.library.enums.FeeStatus;
+import com.lab.library.service.ImageStorageService;
 import com.lab.library.service.MemberService;
 import com.lab.library.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -10,16 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.CacheControl;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +33,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final UserService userService;
+    private final ImageStorageService imageStorageService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MemberResponse> create(
@@ -45,10 +46,10 @@ public class MemberController {
             @RequestParam(value = "joinDate", required = true) String joinDate) throws IOException {
 
         UUID userId = userService.getCurrentUserId();
-        String photoPath = photo != null ? saveFile(photo, "photos") : null;
+        StoredImage storedPhoto = photo != null ? imageStorageService.save(photo, "photos") : null;
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(memberService.create(userId, name, email, phone, address, feeAmount, photoPath, joinDate));
+                .body(memberService.create(userId, name, email, phone, address, feeAmount, storedPhoto, joinDate));
     }
 
     @PutMapping("/{id}")
@@ -70,6 +71,12 @@ public class MemberController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         memberService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<byte[]> getPhoto(@PathVariable UUID id) {
+        StoredImage image = memberService.getMemberPhoto(id);
+        return buildImageResponse(image);
     }
 
     @GetMapping
@@ -105,14 +112,13 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getMemberPayments(id));
     }
 
-    private String saveFile(MultipartFile file, String subDir) throws IOException {
-        String uploadDir = System.getProperty("user.dir") + "/uploads/" + subDir;
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+    private ResponseEntity<byte[]> buildImageResponse(StoredImage image) {
+        if (image == null) {
+            return ResponseEntity.notFound().build();
         }
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-        return "/uploads/" + subDir + "/" + fileName;
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(image.contentType()))
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                .body(image.data());
     }
 }

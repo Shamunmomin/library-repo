@@ -38,6 +38,15 @@ public class Subscription {
     @Column(name = "payment_screenshot")
     private String paymentScreenshot;
 
+    @Column(name = "screenshot_data")
+    private byte[] screenshotData;
+
+    @Column(name = "screenshot_content_type")
+    private String screenshotContentType;
+
+    @Column(name = "screenshot_file_name")
+    private String screenshotFileName;
+
     @Column(name = "start_date")
     private LocalDateTime startDate;
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { memberService } from '../../services/memberService'
 import type { Member, MemberPayment } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
 
 export default function MemberPaymentHistory() {
@@ -42,13 +43,15 @@ export default function MemberPaymentHistory() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
         <div className="flex items-center gap-4">
-          {member.photo ? (
-            <img src={member.photo} alt="" className="w-14 h-14 rounded-full object-cover" />
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl">
-              {member.name.charAt(0)}
-            </div>
-          )}
+          <ProtectedImage
+            src={member.photo}
+            className="w-14 h-14 rounded-full object-cover"
+            fallback={
+              <div className="w-14 h-14 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl">
+                {member.name.charAt(0)}
+              </div>
+            }
+          />
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{member.name}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">{member.phone}</p>

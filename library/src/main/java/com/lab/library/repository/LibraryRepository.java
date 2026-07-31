@@ -20,4 +20,6 @@ public interface LibraryRepository extends JpaRepository<Library, UUID> {
 
     @Query("SELECT DISTINCT l.user FROM Library l")
     List<User> findDistinctUsers();
+
+    List<Library> findByIconDataIsNullAndIconIsNotNull();
 }

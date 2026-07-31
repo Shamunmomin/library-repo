@@ -21,4 +21,6 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     @Query("SELECT m FROM Member m WHERE m.library = :library AND m.paidUpTo IS NOT NULL AND m.paidUpTo < :today")
     List<Member> findExpiredFeeMembers(@Param("library") Library library, @Param("today") LocalDate today);
+
+    List<Member> findByPhotoDataIsNullAndPhotoIsNotNull();
 }

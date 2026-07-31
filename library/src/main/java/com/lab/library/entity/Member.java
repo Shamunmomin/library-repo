@@ -40,6 +40,15 @@ public class Member {
 
     private String photo;
 
+    @Column(name = "photo_data")
+    private byte[] photoData;
+
+    @Column(name = "photo_content_type")
+    private String photoContentType;
+
+    @Column(name = "photo_file_name")
+    private String photoFileName;
+
     @Column(name = "join_date")
     private LocalDate joinDate;
 

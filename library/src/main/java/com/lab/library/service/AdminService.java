@@ -103,7 +103,8 @@ public class AdminService {
                 .name(library.getName())
                 .address(library.getAddress())
                 .phone(library.getPhone())
-                .icon(library.getIcon())
+                .icon(library.getIconData() != null || library.getIcon() != null
+                        ? "/api/libraries/" + library.getId() + "/icon" : null)
                 .subscriptionPackage(sub != null ? sub.getPackageType().name() : "NONE")
                 .subscriptionStatus(sub != null ? sub.getStatus().name() : "NONE")
                 .floorCount(floorCount)

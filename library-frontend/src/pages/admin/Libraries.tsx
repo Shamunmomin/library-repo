@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { adminService } from '../../services/adminService'
 import type { LibraryDetail } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
 
 export default function AdminLibraries() {
@@ -41,7 +42,7 @@ export default function AdminLibraries() {
         <button onClick={() => setSelected(null)} className="mb-4 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400">&larr; Back to Libraries</button>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 max-w-2xl">
           <div className="flex items-start gap-4 mb-6">
-            {selected.icon && <img src={selected.icon} alt="" className="w-16 h-16 rounded-lg object-cover" />}
+            <ProtectedImage src={selected.icon} alt="" className="w-16 h-16 rounded-lg object-cover" />
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selected.name}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{selected.address}</p>
