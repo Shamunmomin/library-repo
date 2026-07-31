@@ -12,9 +12,9 @@ const navItems = [
 
 export default function AdminLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
       <Sidebar title="Admin Panel" navItems={navItems} basePath="/admin" />
-      <main className="flex-1 p-4 md:p-6 pt-16 lg:pt-6 overflow-x-hidden">
+      <main className="flex-1 p-4 md:p-6 pt-16 lg:pt-6  overflow-y-auto">
         <PageTransition>
           <Outlet />
         </PageTransition>
