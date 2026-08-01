@@ -331,7 +331,7 @@ export default function OwnerSeats() {
                 hover:ring-2 hover:ring-primary-400`}
             >
               <div className="text-xs font-semibold">{seat.seatNumber}</div>
-              <div className="text-[9px] opacity-75 mt-0.5">{seat.status}</div>
+               <div className="text-[9px] opacity-75 mt-0.5 truncate">{seat.status}</div>
             </button>
           ))}
         </div>
