@@ -37,7 +37,7 @@ public class MemberController {
     private final ImageStorageService imageStorageService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('OWNER')")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<MemberResponse> create(
             @RequestParam("name") String name,
             @RequestParam(value = "email", required = false) String email,
@@ -83,7 +83,7 @@ public class MemberController {
 
 
     @GetMapping
-    @PreAuthorize("hasAuthority('OWNER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<PageResponse<MemberResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,

@@ -19,7 +19,7 @@ public class DashboardController {
     private final UserService userService;
 
     @GetMapping("/owner/stats")
-    @PreAuthorize("hasAuthority('OWNER')")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<OwnerDashboardStatsResponse> getOwnerStats() {
         OwnerDashboardStatsResponse stats = dashboardService.getOwnerStats(userService.getCurrentUserId());
         return ResponseEntity.ok(stats);
