@@ -11,7 +11,7 @@ import toast from 'react-hot-toast'
 const statusColors: Record<string, string> = {
   AVAILABLE: 'bg-green-100 border-green-300 text-green-700 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300',
   OCCUPIED: 'bg-red-100 border-red-300 text-red-700 dark:bg-red-900/30 dark:border-red-700 dark:text-red-300',
-  MAINTENANCE: 'bg-yellow-100 border-yellow-300 text-yellow-700 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300',
+  MAINTENANCE: 'bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-900/80 dark:border-yellow-500 dark:text-yellow-200',
 }
 
 export default function OwnerSeats() {
