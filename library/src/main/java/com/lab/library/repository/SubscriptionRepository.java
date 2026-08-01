@@ -6,6 +6,7 @@ import com.lab.library.enums.SubscriptionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,6 +15,8 @@ import java.util.UUID;
 public interface SubscriptionRepository extends JpaRepository<Subscription, UUID> {
     Optional<Subscription> findTopByUserOrderByCreatedAtDesc(User user);
     List<Subscription> findByStatus(SubscriptionStatus status);
+    List<Subscription> findByStatusAndEndDateBefore(SubscriptionStatus status, LocalDateTime endDate);
+    List<Subscription> findByStatusAndEndDateBetween(SubscriptionStatus status, LocalDateTime from, LocalDateTime to);
     List<Subscription> findAllByOrderByCreatedAtDesc();
     boolean existsByUserAndStatus(User user, SubscriptionStatus status);
     long countByStatus(SubscriptionStatus status);

@@ -26,12 +26,21 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     List<Member> findByPhotoDataIsNullAndPhotoIsNotNull();
 
-    @Query(value = "SELECT m FROM Member m WHERE m.library = :library " +
-            "AND (:search IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :search, '%')) OR m.phone LIKE CONCAT('%', :search, '%')) " +
-            "AND (:feeStatus IS NULL OR m.feeStatus = :feeStatus)",
-            countQuery = "SELECT COUNT(m) FROM Member m WHERE m.library = :library " +
-                    "AND (:search IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :search, '%')) OR m.phone LIKE CONCAT('%', :search, '%')) " +
-                    "AND (:feeStatus IS NULL OR m.feeStatus = :feeStatus)")
+
+    @Query("""
+SELECT m
+FROM Member m
+WHERE m.library = :library
+AND (
+    :search IS NULL
+    OR m.name LIKE CONCAT('%', :search, '%')
+    OR m.phone LIKE CONCAT('%', :search, '%')
+)
+AND (
+    :feeStatus IS NULL
+    OR m.feeStatus = :feeStatus
+)
+""")
     Page<Member> searchMembers(@Param("library") Library library,
                                @Param("search") String search,
                                @Param("feeStatus") FeeStatus feeStatus,

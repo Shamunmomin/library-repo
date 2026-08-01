@@ -1,5 +1,6 @@
 package com.lab.library.service;
 
+import com.lab.library.config.SubscriptionProperties;
 import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.SubscriptionResponse;
 import com.lab.library.entity.Payment;
@@ -15,6 +16,7 @@ import com.lab.library.exception.UnauthorizedException;
 import com.lab.library.mapper.SubscriptionMapper;
 import com.lab.library.repository.PaymentRepository;
 import com.lab.library.repository.SubscriptionRepository;
+import com.lab.library.service.policy.SubscriptionExpiryPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,11 +39,15 @@ public class SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
     private final ImageStorageService imageStorageService;
     private final SubscriptionEventService subscriptionEventService;
+    private final SubscriptionExpiryPolicy expiryPolicy;
+    private final SubscriptionProperties properties;
 
     public SubscriptionPackage getUserActivePackage(UUID userId) {
         User user = userService.getById(userId);
+        LocalDateTime now = LocalDateTime.now();
         return subscriptionRepository.findTopByUserOrderByCreatedAtDesc(user)
                 .filter(sub -> sub.getStatus() == SubscriptionStatus.ACTIVE)
+                .filter(sub -> !expiryPolicy.isLockedOut(sub.getEndDate(), now))
                 .map(Subscription::getPackageType)
                 .orElse(null);
     }
@@ -80,8 +86,16 @@ public class SubscriptionService {
 
     public SubscriptionResponse getMySubscription(UUID userId) {
         User user = userService.getById(userId);
+        LocalDateTime now = LocalDateTime.now();
         return subscriptionRepository.findTopByUserOrderByCreatedAtDesc(user)
-                .map(subscriptionMapper::toResponse)
+                .map(subscription -> {
+                    SubscriptionResponse response = subscriptionMapper.toResponse(subscription);
+                    SubscriptionStatus effective = expiryPolicy.resolveEffectiveStatus(subscription, now);
+                    if (effective != subscription.getStatus()) {
+                        response.setStatus(effective.name());
+                    }
+                    return response;
+                })
                 .orElse(null);
     }
 
@@ -131,7 +145,7 @@ public class SubscriptionService {
 
         if (newStatus == SubscriptionStatus.ACTIVE) {
             subscription.setStartDate(LocalDateTime.now());
-            subscription.setEndDate(LocalDateTime.now().plusMonths(1));
+            subscription.setEndDate(LocalDateTime.now().plusMonths(properties.getMonthsPerCycle()));
 
             BigDecimal amount = subscription.getPackageType() == SubscriptionPackage.PRO
                     ? new BigDecimal("999") : new BigDecimal("499");

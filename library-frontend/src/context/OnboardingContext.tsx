@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
-import type { OnboardingStatus, OnboardingStep } from '../types'
+import type { OnboardingStatus, OnboardingStep, Subscription } from '../types'
 import { userService } from '../services/userService'
 import { useAuth } from './AuthContext'
 
@@ -8,6 +8,7 @@ interface OnboardingContextType {
   status: OnboardingStatus | null
   step: OnboardingStep | null
   notice: string | null
+  subscription: Subscription | null
   loading: boolean
   refresh: () => Promise<OnboardingStatus | null>
 }
@@ -79,6 +80,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         status,
         step: status?.nextStep ?? null,
         notice: status?.notice ?? null,
+        subscription: status?.subscription ?? null,
         loading,
         refresh,
       }}

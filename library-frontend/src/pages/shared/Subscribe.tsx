@@ -9,7 +9,7 @@ import scannerImg from '../../../public/scanner.jpeg';
 import toast from 'react-hot-toast'
 
 export default function Subscribe() {
-  const { step, notice, loading, refresh } = useOnboarding()
+  const { step, notice, loading, refresh, subscription } = useOnboarding()
 
   if (loading) {
     return (
@@ -23,10 +23,14 @@ export default function Subscribe() {
     return <PendingApproval onRefresh={refresh} />
   }
 
-  return <SubscribeForm notice={notice} onSubmitted={refresh} />
+  return <SubscribeForm notice={notice} expired={subscription?.status === 'EXPIRED'} onSubmitted={refresh} />
 }
 
-function SubscribeForm({ notice, onSubmitted }: { notice: string | null; onSubmitted: () => Promise<unknown> }) {
+function SubscribeForm({ notice, expired, onSubmitted }: {
+  notice: string | null
+  expired: boolean
+  onSubmitted: () => Promise<unknown>
+}) {
   const [selected, setSelected] = useState<'BASE' | 'PRO'>('BASE')
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -72,7 +76,19 @@ function SubscribeForm({ notice, onSubmitted }: { notice: string | null; onSubmi
           <p className="text-gray-500 dark:text-gray-400">Pick the right plan for your library management needs</p>
         </div>
 
-        {notice && (
+        {expired && (
+          <div className="max-w-2xl mx-auto mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-5 text-center">
+            <h2 className="text-lg font-bold text-red-800 dark:text-red-200 mb-1">Your subscription has expired</h2>
+            <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+              Access to your library workspace has been locked. Renew below to restore access — all your data is safe.
+            </p>
+            <span className="inline-block bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg">
+              Renew Now
+            </span>
+          </div>
+        )}
+
+        {notice && !expired && (
           <div className="max-w-2xl mx-auto mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200">
             {notice}
           </div>
