@@ -104,14 +104,27 @@ export default function OwnerSeats() {
     const menuWidth = menu.offsetWidth
     const margin = 4
     const minTop = window.innerWidth < 1024 ? 60 : margin
+
     let top = menuPos.top
     let left = menuPos.left
-    if (top + menuHeight > window.innerHeight - margin) {
+
+    const triggerRect = triggerRef.current?.getBoundingClientRect()
+    if (triggerRect) {
+      const spaceBelow = window.innerHeight - triggerRect.bottom
+      const spaceAbove = triggerRect.top
+      if (menuHeight + margin > spaceBelow) {
+        top = menuHeight + margin <= spaceAbove
+          ? triggerRect.top - menuHeight - margin
+          : Math.max(minTop, window.innerHeight - menuHeight - margin)
+      }
+    } else if (top + menuHeight > window.innerHeight - margin) {
       top = Math.max(minTop, window.innerHeight - menuHeight - margin)
     }
+
     if (left + menuWidth > window.innerWidth - margin) {
       left = Math.max(margin, window.innerWidth - menuWidth - margin)
     }
+
     if (top !== menuPos.top || left !== menuPos.left) {
       setMenuPos({ top, left })
     }
