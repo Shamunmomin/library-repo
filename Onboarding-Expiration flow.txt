@@ -1,0 +1,219 @@
+================================================================================
+ ONBOARDING & SUBSCRIPTION EXPIRATION FLOW — LibraryPro SaaS
+================================================================================
+Purpose: Reference design for the user onboarding (subscribe -> approved ->
+setup -> dashboard) and the subscription lifecycle (active -> grace ->
+expired -> renew) flows. Reusable blueprint for future applications.
+
+--------------------------------------------------------------------------------
+1. CORE PRINCIPLES
+--------------------------------------------------------------------------------
+1. SERVER IS THE SOURCE OF TRUTH
+   - Backend computes the user's current onboarding step and returns it:
+     GET /api/users/onboarding-status
+       -> { hasSubscription, subscription, hasLibrary, library,
+            nextStep, notice }
+   - The client NEVER decides the destination; it only navigates to
+     nextStep's canonical route. No client-side business rules.
+   - Rationale: this eliminated the bug where a page refresh at /subscribe
+     bounced the user back to /subscribe after admin acceptance (a stale
+     "return to where you were" override winning over fresh server state).
+
+2. STATE MACHINE (single enum, server-computed)
+   OnboardingStep:
+     SUBSCRIBE       -> no subscription, OR rejected/expired (re-apply)
+     PENDING_REVIEW  -> payment submitted, awaiting admin verification
+     SETUP_LIBRARY   -> subscription ACTIVE, no library created yet
+     DASHBOARD       -> subscription ACTIVE and library exists
+
+   Canonical routes:
+     SUBSCRIBE       -> /subscribe
+     PENDING_REVIEW  -> /subscribe        (shows PendingApproval screen)
+     SETUP_LIBRARY   -> /owner/library
+     DASHBOARD       -> /owner/dashboard
+
+3. GUARD ON EVERY NAVIGATION
+   - OnboardingGuard wraps /subscribe and /owner/* routes. It re-evaluates
+     the server state on every route change, so refresh / deep-link /
+     manual URL entry can never land on the wrong page.
+   - Client state lives in one place: OnboardingContext (single SSE
+     connection + status cache), consumed by Splash, guards, pages.
+
+4. NO STALE AUTH STATE
+   - sessionStorage stores ONLY tokens. On boot the user is re-hydrated
+     via GET /api/users/me. The app never trusts a cached user object.
+
+5. REALTIME OVER POLLING
+   - SSE endpoint GET /api/subscriptions/events pushes subscription-updated
+     events (created/verified/expired) to the owner's open tab.
+   - Client uses fetch-event-source (works with JWT Authorization header,
+     auto-reconnect + backoff, refetches status on reconnect).
+   - Read-side safety net guarantees correctness even when events are missed
+     (tab closed, connection dropped): status is always recomputed on read.
+
+6. RULES IN POLICY, NOT CODE
+   - All lifecycle numbers live in application.properties (env-overridable):
+     grace period, cycle length, cron, reminder windows.
+   - Pure SubscriptionExpiryPolicy interface + config-driven implementation
+     = unit-testable, no hardcoded dates anywhere.
+
+--------------------------------------------------------------------------------
+2. ONBOARDING FLOW (per actor)
+--------------------------------------------------------------------------------
+2.1 OWNER (new / first time)
+   register/login
+     -> navigate /splash
+        -> Splash reads onboarding status, routes by nextStep
+     -> SUBSCRIBE
+        -> /subscribe shows plan form (BASE/PRO) + UPI screenshot upload
+        -> submit -> POST /api/subscriptions (multipart)
+           backend: creates Subscription status=PENDING, stores screenshot,
+                    SSE "subscription-updated" -> client refresh()
+        -> nextStep=PENDING_REVIEW -> PendingApproval screen
+           "Check status" button + live SSE updates
+     -> ADMIN accepts (POST /api/admin/subscriptions/{id}/verify)
+        backend: status=ACTIVE, startDate=now,
+                 endDate=now + months-per-cycle, Payment recorded (COMPLETED),
+                 SSE event pushed to owner
+        -> client auto-refreshes -> nextStep=SETUP_LIBRARY
+        -> owner lands on /owner/library (setup wizard), creates library
+        -> nextStep=DASHBOARD -> /owner/dashboard from then on
+
+2.2 OWNER (admin rejected the request)
+   verify(REJECTED) -> status=REJECTED, rejectionReason, SSE event
+     -> nextStep=SUBSCRIBE + notice "Your previous request was rejected: <reason>"
+     -> /subscribe shows form with amber notice banner; owner re-applies
+        (create() allows it: only ACTIVE/PENDING block a new request)
+
+2.3 ADMIN
+   /login -> /admin/dashboard (AuthGuard role check; never touches onboarding)
+   - /admin/subscriptions: filters ALL/PENDING/ACTIVE/REJECTED
+     - Accept  -> status=ACTIVE (+payment row)
+     - Reject  -> status=REJECTED (+optional reason)
+   - If admin opens /subscribe or /owner/* -> OnboardingGuard redirects to
+     /admin/dashboard.
+
+2.4 PAGE REFRESH AT ANY URL (the original bug, now handled)
+   F5 at /subscribe after acceptance
+     -> boot: /users/me (session restored) + onboarding status fetched
+     -> step=SETUP_LIBRARY -> OnboardingGuard -> /owner/library
+   F5 at /owner/* when expired
+     -> step=SUBSCRIBE -> guard -> /subscribe (expired screen)
+   Conclusion: destination always comes from the server, never the URL.
+
+--------------------------------------------------------------------------------
+3. EXPIRATION FLOW (subscription lifecycle)
+--------------------------------------------------------------------------------
+Timeline (config: months-per-cycle=1, grace-period-days=3,
+                expiry-cron="0 0 6 * * *", reminder-days-before=3,1)
+
+  T+0        admin accepts -> ACTIVE, endDate = now + 1 month
+  T-3 days   daily 6am job: reminder email "expires in 3 days" (once)
+  T-1 day    daily 6am job: reminder email "expires in 1 day" (once)
+  endDate    GRACE PERIOD starts (owner keeps FULL access)
+             - amber banner in OwnerLayout: "Expires on <date>"
+             - status is still ACTIVE in DB and for the client
+  endDate+3d LOCKOUT (grace exhausted)
+             - Read-side safety net: getMySubscription/getUserActivePackage
+               resolve effective status = EXPIRED immediately, even before
+               the job runs. Owner is locked out at the exact boundary.
+             - 6am job flips DB status ACTIVE -> EXPIRED, pushes SSE
+               (open tab live-jumps to /subscribe), sends "expired" email.
+  after      Owner sees red "Subscription expired - Renew Now" card
+             -> resubmits (new PENDING row) -> admin accepts
+             -> new ACTIVE with fresh endDate
+             -> hasLibrary still true -> nextStep=DASHBOARD
+             -> straight back to /owner/dashboard, all data intact.
+             (No data is ever deleted on expiry.)
+
+JOB GUARANTEES
+  - Idempotent: flips only rows matching ACTIVE AND end_date < cutoff.
+  - No duplicate emails: NotificationLog unique (subscription_id, type,
+    reminder_days) written before/with each send.
+  - Per-subscription try/catch: one failure cannot abort the batch.
+  - Emails are @Async on a dedicated thread pool; job never blocks on SMTP.
+  - Grace period, cron, cycle length, reminder windows are config-driven.
+
+EFFECTIVE-STATUS RESOLUTION (read side)
+  resolveEffectiveStatus(sub, now):
+    ACTIVE && now > endDate + grace  ->  EXPIRED
+    else                              ->  unchanged status
+  Applied in getMySubscription and getUserActivePackage (guards library
+  creation / feature access after lockout).
+
+--------------------------------------------------------------------------------
+4. COMPONENT MAP (implementation reference)
+--------------------------------------------------------------------------------
+BACKEND (com.lab.library)
+  - enums/OnboardingStep            SUBSCRIBE|PENDING_REVIEW|SETUP_LIBRARY|DASHBOARD
+  - enums/SubscriptionStatus        PENDING|ACTIVE|EXPIRED|REJECTED
+  - enums/NotificationType          EXPIRED|REMINDER
+  - config/SubscriptionProperties   monthsPerCycle, gracePeriodDays, expiryCron,
+                                    reminderDaysBefore
+  - config/AsyncSchedulingConfig    @EnableScheduling @EnableAsync + notificationExecutor
+  - service/policy/SubscriptionExpiryPolicy
+        lockoutTime, isLockedOut, isReminderDue, resolveEffectiveStatus
+  - service/policy/GracePeriodSubscriptionExpiryPolicy   (config impl)
+  - service/SubscriptionService     verify/create/getMySubscription/getUserActivePackage
+                                    (read-side net + dynamic cycle length + SSE notify)
+  - service/SubscriptionExpiryService  6am @Scheduled job (expire + reminders)
+  - service/SubscriptionEventService   SSE emitter registry per user
+  - service/EmailService + EmailTemplates  @Async HTML mail, gated by config
+  - entity/NotificationLog            idempotency ledger (unique sub+type+days)
+  - controller/SubscriptionController /events (SSE), CRUD
+  - controller/UserController         /me, /onboarding-status
+  - repo/SubscriptionRepository       findByStatusAndEndDateBefore/Between
+
+FRONTEND (library-frontend/src)
+  - context/AuthContext           tokens only; bootstrap via /users/me
+  - context/OnboardingContext     status cache + SSE + refresh(); exposes
+                                  step, notice, subscription, loading
+  - guard/AuthGuard               auth + role
+  - guard/OnboardingGuard         allowedSteps per route group; step not
+                                  allowed -> Navigate to STEP_ROUTES[step]
+  - pages/shared/Splash           boot redirector, pure (no returnTo override)
+  - pages/shared/Subscribe        switch: PENDING -> PendingApproval,
+                                  else SubscribeForm (+ expired/rejected cards)
+  - components/SubscriptionExpiryBanner   amber banner in grace/soon window
+  - utils/constants               ROUTES + STEP_ROUTES map
+  - services/fetch-event-source   SSE client w/ auto-reconnect
+
+--------------------------------------------------------------------------------
+5. KEY CONFIGURATION KNOBS
+--------------------------------------------------------------------------------
+  app.subscription.months-per-cycle=1
+  app.subscription.grace-period-days=3
+  app.subscription.expiry-cron=0 0 6 * * *
+  app.subscription.reminder-days-before=3,1
+  app.notifications.frontend-url=http://localhost:3000
+  app.notifications.mail.enabled=false
+  spring.mail.host/port/username/password  (env: SMTP_HOST, SMTP_PORT, ...)
+
+--------------------------------------------------------------------------------
+6. BEHAVIOR CHEAT-SHEET (test scenarios)
+--------------------------------------------------------------------------------
+  Owner new login                    -> /splash -> /subscribe (form)
+  Owner submits, pending             -> PendingApproval screen
+  Admin accepts (owner tab open)     -> SSE -> auto-jump to /owner/library
+  Owner refreshes /subscribe after
+    acceptance (historical bug)      -> /owner/library (server-driven)
+  Admin rejects                      -> form + rejection notice banner
+  Owner expires (lockout)            -> /subscribe, red expired card
+  Owner renews after expiry          -> pending -> accept -> dashboard (data intact)
+  Owner during grace                 -> full access + amber banner
+  Reminder emails                    -> exactly once per window (T-3d, T-1d)
+  Email server down / disabled       -> app unaffected (async, gated, logged)
+  SSE connection dropped             -> auto-reconnect + refetch on open
+
+--------------------------------------------------------------------------------
+7. EXTENSIONS / FUTURE WORK
+--------------------------------------------------------------------------------
+  - Renew-before-expiry (extension/auto-renew) while status is still ACTIVE:
+    requires allowing a renewal PENDING alongside ACTIVE and marking the
+    previous subscription superseded on verify.
+  - Multi-instance deployments: add ShedLock to the scheduled job.
+  - Email deliverability: real templates (Thymeleaf), unsubscribe links,
+    SMTP retry queue for failed sends.
+  - Payment integration (Razorpay/Stripe) replacing manual screenshot review.
+  - Analytics on lifecycle funnel (conversion, churn, reactivation).
+================================================================================

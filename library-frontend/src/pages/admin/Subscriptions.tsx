@@ -83,6 +83,7 @@ export default function AdminSubscriptions() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Screenshot</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Date</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Expiry Date</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
@@ -111,7 +112,10 @@ export default function AdminSubscriptions() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                    {new Date(sub.createdAt).toLocaleDateString()}
+                    {new Date(sub.startDate).toLocaleDateString()}
+                  </td>
+                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+                    {new Date(sub.endDate).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
                     {sub.status === 'PENDING' ? (

@@ -180,8 +180,10 @@ public class MemberService {
         int safePage = Math.max(page, 0);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by("name").ascending());
 
+        String searchTerm = (search != null && !search.isBlank()) ? search.toLowerCase() : null;
 
-        Page<Member> memberPage = memberRepository.searchMembers(library, search.toLowerCase(), feeStatus, pageable);
+
+        Page<Member> memberPage = memberRepository.searchMembers(library, searchTerm, feeStatus, pageable);
         List<MemberResponse> content = memberPage.getContent().stream()
                 .map(this::buildResponse)
                 .toList();

@@ -173,9 +173,9 @@ public class ReportService {
             document.add(new Paragraph(" "));
 
             List<Payment> payments = paymentRepository.findAllByOrderByCreatedAtDesc();
-            PdfPTable table = new PdfPTable(7);
+            PdfPTable table = new PdfPTable(6);
             table.setWidthPercentage(100);
-            addTableHeader(table, "User Name","Phone", "Amount","Subscription", "Status", "Payment Date","Subscription EndDate");
+            addTableHeader(table, "User Name","Phone", "Amount","Subscription", "Status", "Payment Date");
 
             for (Payment p : payments) {
                 addTableCell(table,
@@ -184,8 +184,8 @@ public class ReportService {
                         p.getAmount() != null ? "Rs." + p.getAmount().toString() : "Rs.0",
                         p.getSubscriptionType() != null ? p.getSubscriptionType().name() : "-",
                         p.getStatus().name(),
-                        p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString(): "-",
-                        p.getSubscriptionEndDate() != null ? p.getSubscriptionEndDate().toLocalDate().toString(): "-");
+                        p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString(): "-");
+//                        p.getSubscriptionEndDate() != null ? p.getSubscriptionEndDate().toLocalDate().toString(): "-");
             }
 
             document.add(table);

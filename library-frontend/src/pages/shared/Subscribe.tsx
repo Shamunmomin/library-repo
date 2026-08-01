@@ -189,7 +189,7 @@ function PendingApproval({ onRefresh }: { onRefresh: () => Promise<unknown> }) {
     setRefreshing(true)
     try {
       await onRefresh()
-      toast.success('Status updated')
+      toast.success('Status updating...')
     } finally {
       setRefreshing(false)
     }
