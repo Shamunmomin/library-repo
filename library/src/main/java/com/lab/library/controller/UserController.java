@@ -1,6 +1,7 @@
 package com.lab.library.controller;
 
 import com.lab.library.dto.response.OnboardingStatusResponse;
+import com.lab.library.dto.response.UserResponse;
 import com.lab.library.service.LibraryService;
 import com.lab.library.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,11 @@ public class UserController {
 
     private final UserService userService;
     private final LibraryService libraryService;
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        return ResponseEntity.ok(userService.getCurrentUserResponse());
+    }
 
     @GetMapping("/onboarding-status")
     public ResponseEntity<OnboardingStatusResponse> getOnboardingStatus() {

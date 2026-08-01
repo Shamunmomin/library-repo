@@ -1,7 +1,9 @@
 package com.lab.library.service;
 
+import com.lab.library.dto.response.UserResponse;
 import com.lab.library.entity.User;
 import com.lab.library.exception.ResourceNotFoundException;
+import com.lab.library.mapper.UserMapper;
 import com.lab.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -30,6 +33,10 @@ public class UserService {
 
     public UUID getCurrentUserId() {
         return getCurrentUser().getId();
+    }
+
+    public UserResponse getCurrentUserResponse() {
+        return userMapper.toResponse(getCurrentUser());
     }
 
     public User getById(UUID id) {

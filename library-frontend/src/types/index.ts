@@ -32,6 +32,7 @@ export interface RefreshTokenRequest {
 
 export type SubscriptionPackage = 'BASE' | 'PRO'
 export type SubscriptionStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'REJECTED'
+export type OnboardingStep = 'SUBSCRIBE' | 'PENDING_REVIEW' | 'SETUP_LIBRARY' | 'DASHBOARD'
 
 export interface Subscription {
   id: string
@@ -143,6 +144,8 @@ export interface OnboardingStatus {
   subscription: Subscription | null
   hasLibrary: boolean
   library: Library | null
+  nextStep: OnboardingStep
+  notice: string | null
 }
 
 export interface OwnerDashboardStats {

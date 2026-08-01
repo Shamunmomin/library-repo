@@ -1,5 +1,6 @@
 package com.lab.library.dto.response;
 
+import com.lab.library.enums.OnboardingStep;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,4 +15,6 @@ public class OnboardingStatusResponse {
     private SubscriptionResponse subscription;
     private boolean hasLibrary;
     private LibraryResponse library;
+    private OnboardingStep nextStep;
+    private String notice;
 }

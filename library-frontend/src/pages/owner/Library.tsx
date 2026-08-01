@@ -74,7 +74,7 @@ export default function OwnerLibrary() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm outline-none focus:border-primary-500" placeholder="+1 234 567 890" />
+          <input value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm outline-none focus:border-primary-500" placeholder="+1 234 567 890" maxLength={10} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon (optional)</label>

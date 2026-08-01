@@ -1,14 +1,32 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckIcon } from '@heroicons/react/24/solid'
 import { subscriptionService } from '../../services/subscriptionService'
-import { SUBSCRIPTION_PACKAGES, ROUTES } from '../../utils/constants'
+import { SUBSCRIPTION_PACKAGES } from '../../utils/constants'
+import { useOnboarding } from '../../context/OnboardingContext'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import scannerImg from '../../../public/scanner.jpeg';
 import toast from 'react-hot-toast'
 
 export default function Subscribe() {
-  const navigate = useNavigate()
+  const { step, notice, loading, refresh } = useOnboarding()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  if (step === 'PENDING_REVIEW') {
+    return <PendingApproval onRefresh={refresh} />
+  }
+
+  return <SubscribeForm notice={notice} onSubmitted={refresh} />
+}
+
+function SubscribeForm({ notice, onSubmitted }: { notice: string | null; onSubmitted: () => Promise<unknown> }) {
   const [selected, setSelected] = useState<'BASE' | 'PRO'>('BASE')
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -31,8 +49,9 @@ export default function Subscribe() {
     setIsSubmitting(true)
     try {
       await subscriptionService.create(selected, screenshot)
-      setSubmitted(true)
       toast.success('Subscription request submitted!')
+      await onSubmitted()
+      setSubmitted(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       toast.error(msg || 'Failed to submit subscription')
@@ -42,35 +61,7 @@ export default function Subscribe() {
   }
 
   if (submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center max-w-md"
-        >
-          <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
-            <CheckIcon className="w-10 h-10 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Request Submitted!</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Your payment screenshot has been received. An admin will verify your payment and activate your subscription shortly.
-          </p>
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Please wait while admin reviews your payment. This usually takes 5 minutes to 10 minutes.
-            </p>
-            <p>other wise please call this number +91 7796849206</p>
-          </div>
-          <button
-            onClick={() => navigate(ROUTES.SPLASH)}
-            className="text-primary-600 hover:text-primary-700 font-medium text-sm"
-          >
-            Back to splash screen
-          </button>
-        </motion.div>
-      </div>
-    )
+    return <PendingApproval onRefresh={onSubmitted} />
   }
 
   return (
@@ -80,6 +71,12 @@ export default function Subscribe() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Choose Your Plan</h1>
           <p className="text-gray-500 dark:text-gray-400">Pick the right plan for your library management needs</p>
         </div>
+
+        {notice && (
+          <div className="max-w-2xl mx-auto mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200">
+            {notice}
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-6 mb-10">
           {(Object.entries(SUBSCRIPTION_PACKAGES) as [string, typeof SUBSCRIPTION_PACKAGES.BASE][]).map(([key, pkg]) => (
@@ -165,6 +162,51 @@ export default function Subscribe() {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function PendingApproval({ onRefresh }: { onRefresh: () => Promise<unknown> }) {
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    try {
+      await onRefresh()
+      toast.success('Status updated')
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-center max-w-md"
+      >
+        <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
+          <CheckIcon className="w-10 h-10 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Request Submitted!</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">
+          Your payment screenshot has been received. An admin will verify your payment and activate your subscription shortly.
+        </p>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            You will be taken to your library setup automatically once your payment is verified. This usually takes 5 to 10 minutes.
+          </p>
+          <p>other wise please call this number +91 7796849206</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="px-5 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          {refreshing ? 'Checking...' : 'Check status'}
+        </button>
+      </motion.div>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 export const APP_NAME = 'LibraryPro'
 
+import type { OnboardingStep } from '../types'
+
 export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
@@ -19,6 +21,13 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
   ADMIN_PAYMENTS: '/admin/payments',
 } as const
+
+export const STEP_ROUTES: Record<OnboardingStep, string> = {
+  SUBSCRIBE: ROUTES.SUBSCRIBE,
+  PENDING_REVIEW: ROUTES.SUBSCRIBE,
+  SETUP_LIBRARY: ROUTES.OWNER_LIBRARY,
+  DASHBOARD: ROUTES.OWNER_DASHBOARD,
+}
 
 export const SUBSCRIPTION_PACKAGES = {
   BASE: {

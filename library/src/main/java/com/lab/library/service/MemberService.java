@@ -57,7 +57,7 @@ public class MemberService {
 
         Member member = Member.builder()
                 .library(library)
-                .name(name)
+                .name(name.toLowerCase())
                 .email(email)
                 .phone(phone)
                 .address(address)
@@ -81,7 +81,7 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
 
-        if (name != null) member.setName(name);
+        if (name != null) member.setName(name.toLowerCase());
         if (email != null) member.setEmail(email);
         if (phone != null) member.setPhone(phone);
         if (address != null) member.setAddress(address);
@@ -180,7 +180,8 @@ public class MemberService {
         int safePage = Math.max(page, 0);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by("name").ascending());
 
-        Page<Member> memberPage = memberRepository.searchMembers(library, search, feeStatus, pageable);
+
+        Page<Member> memberPage = memberRepository.searchMembers(library, search.toLowerCase(), feeStatus, pageable);
         List<MemberResponse> content = memberPage.getContent().stream()
                 .map(this::buildResponse)
                 .toList();

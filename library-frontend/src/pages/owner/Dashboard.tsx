@@ -25,7 +25,7 @@ export default function OwnerDashboard() {
   useEffect(() => {
     Promise.all([
       dashboardService.getOwnerStats(),
-      memberService.getAll({ page: 0, size: 100 }),
+      memberService.getAll({ page: 0, size: 10 }),
       subscriptionService.getMySubscription(),
       memberService.getFeeExpired(),
     ]).then(([s, m, sub, expired]) => {

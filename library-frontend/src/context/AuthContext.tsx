@@ -5,6 +5,7 @@ import { authService } from '../services/authService'
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
+  isBootstrapping: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<User>
   register: (name: string, email: string, password: string, phone: string) => Promise<void>
@@ -15,26 +16,41 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('user')
-    return stored ? JSON.parse(stored) : null
-  })
+  const [user, setUser] = useState<User | null>(null)
+  const [isBootstrapping, setIsBootstrapping] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user))
-    } else {
-      localStorage.removeItem('user')
+    let cancelled = false
+
+    async function bootstrap() {
+      if (!sessionStorage.getItem('accessToken')) {
+        setIsBootstrapping(false)
+        return
+      }
+      try {
+        const currentUser = await authService.me()
+        if (!cancelled) setUser(currentUser)
+      } catch {
+        // tokens already cleared by the axios interceptor on refresh failure
+        if (!cancelled) setUser(null)
+      } finally {
+        if (!cancelled) setIsBootstrapping(false)
+      }
     }
-  }, [user])
+
+    bootstrap()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true)
     try {
       const response = await authService.login({ email, password })
-      localStorage.setItem('accessToken', response.accessToken)
-      localStorage.setItem('refreshToken', response.refreshToken)
+      sessionStorage.setItem('accessToken', response.accessToken)
+      sessionStorage.setItem('refreshToken', response.refreshToken)
       setUser(response.user)
       return response.user
     } finally {
@@ -46,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const response = await authService.register({ name, email, password, phone })
-      localStorage.setItem('accessToken', response.accessToken)
-      localStorage.setItem('refreshToken', response.refreshToken)
+      sessionStorage.setItem('accessToken', response.accessToken)
+      sessionStorage.setItem('refreshToken', response.refreshToken)
       setUser(response.user)
     } finally {
       setIsLoading(false)
@@ -60,9 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     } finally {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
+      sessionStorage.removeItem('accessToken')
+      sessionStorage.removeItem('refreshToken')
       setUser(null)
     }
   }, [])
@@ -72,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        isBootstrapping,
         isLoading,
         login,
         register,

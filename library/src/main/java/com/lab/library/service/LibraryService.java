@@ -5,6 +5,7 @@ import com.lab.library.dto.response.LibraryResponse;
 import com.lab.library.dto.response.OnboardingStatusResponse;
 import com.lab.library.entity.Library;
 import com.lab.library.entity.User;
+import com.lab.library.enums.OnboardingStep;
 import com.lab.library.enums.Role;
 import com.lab.library.enums.SubscriptionPackage;
 import com.lab.library.exception.BadRequestException;
@@ -41,11 +42,38 @@ public class LibraryService {
 
         Library library = libraryRepository.findByUser(user).orElse(null);
 
+        OnboardingStep nextStep;
+        String notice = null;
+
+        if (subscriptionResp == null) {
+            nextStep = OnboardingStep.SUBSCRIBE;
+        } else {
+            switch (subscriptionResp.getStatus()) {
+                case "PENDING" -> nextStep = OnboardingStep.PENDING_REVIEW;
+                case "ACTIVE" -> nextStep = library != null
+                        ? OnboardingStep.DASHBOARD
+                        : OnboardingStep.SETUP_LIBRARY;
+                case "REJECTED" -> {
+                    nextStep = OnboardingStep.SUBSCRIBE;
+                    notice = subscriptionResp.getRejectionReason() != null
+                            ? "Your previous request was rejected: " + subscriptionResp.getRejectionReason()
+                            : "Your previous request was rejected. Please resubscribe.";
+                }
+                case "EXPIRED" -> {
+                    nextStep = OnboardingStep.SUBSCRIBE;
+                    notice = "Your subscription has expired. Please resubscribe.";
+                }
+                default -> nextStep = OnboardingStep.SUBSCRIBE;
+            }
+        }
+
         return OnboardingStatusResponse.builder()
                 .hasSubscription(subscriptionResp != null)
                 .subscription(subscriptionResp)
                 .hasLibrary(library != null)
                 .library(library != null ? libraryMapper.toResponse(library) : null)
+                .nextStep(nextStep)
+                .notice(notice)
                 .build();
     }
 

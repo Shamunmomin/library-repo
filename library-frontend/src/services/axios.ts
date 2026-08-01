@@ -26,7 +26,7 @@ function processQueue(error: unknown, token: string | null) {
 }
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem('accessToken')
+  const token = sessionStorage.getItem('accessToken')
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -57,7 +57,7 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken')
+        const refreshToken = sessionStorage.getItem('refreshToken')
         if (!refreshToken) {
           throw new Error('No refresh token')
         }
@@ -67,8 +67,8 @@ api.interceptors.response.use(
           { refreshToken }
         )
 
-        localStorage.setItem('accessToken', data.accessToken)
-        localStorage.setItem('refreshToken', data.refreshToken)
+        sessionStorage.setItem('accessToken', data.accessToken)
+        sessionStorage.setItem('refreshToken', data.refreshToken)
 
         processQueue(null, data.accessToken)
 
@@ -76,9 +76,8 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
+        sessionStorage.removeItem('accessToken')
+        sessionStorage.removeItem('refreshToken')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {

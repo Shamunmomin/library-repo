@@ -36,6 +36,7 @@ public class SubscriptionService {
     private final UserService userService;
     private final SubscriptionMapper subscriptionMapper;
     private final ImageStorageService imageStorageService;
+    private final SubscriptionEventService subscriptionEventService;
 
     public SubscriptionPackage getUserActivePackage(UUID userId) {
         User user = userService.getById(userId);
@@ -71,7 +72,10 @@ public class SubscriptionService {
 
         subscription = subscriptionRepository.save(subscription);
         log.info("Subscription created for user: {} package: {}", user.getEmail(), packageType);
-        return subscriptionMapper.toResponse(subscription);
+
+        SubscriptionResponse response = subscriptionMapper.toResponse(subscription);
+        subscriptionEventService.notifyUser(user.getId(), response);
+        return response;
     }
 
     public SubscriptionResponse getMySubscription(UUID userId) {
@@ -151,6 +155,8 @@ public class SubscriptionService {
 
         subscription = subscriptionRepository.save(subscription);
 
-        return subscriptionMapper.toResponse(subscription);
+        SubscriptionResponse response = subscriptionMapper.toResponse(subscription);
+        subscriptionEventService.notifyUser(subscription.getUser().getId(), response);
+        return response;
     }
 }

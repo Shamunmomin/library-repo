@@ -4,6 +4,7 @@ import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.SubscriptionResponse;
 import com.lab.library.enums.SubscriptionPackage;
 import com.lab.library.service.ImageStorageService;
+import com.lab.library.service.SubscriptionEventService;
 import com.lab.library.service.SubscriptionService;
 import com.lab.library.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -28,6 +30,13 @@ public class SubscriptionController {
     private final SubscriptionService subscriptionService;
     private final UserService userService;
     private final ImageStorageService imageStorageService;
+    private final SubscriptionEventService subscriptionEventService;
+
+    @GetMapping(value = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamEvents() {
+        UUID userId = userService.getCurrentUserId();
+        return subscriptionEventService.subscribe(userId);
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SubscriptionResponse> create(

@@ -1,80 +1,40 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { userService } from '../../services/userService'
-import { APP_NAME, ROUTES } from '../../utils/constants'
+import { APP_NAME, ROUTES, STEP_ROUTES } from '../../utils/constants'
 import { useAuth } from '../../context/AuthContext'
-import toast from 'react-hot-toast'
+import { useOnboarding } from '../../context/OnboardingContext'
 
-type SplashState = 'loading' | 'redirect'
-
-interface SplashProps {
-  returnTo?: string
-  onDone?: () => void
-}
-
-export default function Splash({ returnTo, onDone }: SplashProps) {
+export default function Splash() {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
-  const [message, setMessage] = useState('Checking your account...')
-  const [state, setState] = useState<SplashState>('loading')
+  const { user } = useAuth()
+  const { step, loading } = useOnboarding()
 
-  const go = useCallback((path: string) => {
-    onDone?.()
-    navigate(path)
-  }, [navigate, onDone])
+  const message = useMemo(() => {
+    if (loading || !user) return 'Checking your account...'
+    if (user.role === 'ADMIN') return 'Welcome back!'
+    switch (step) {
+      case 'PENDING_REVIEW':
+        return 'Your payment is being reviewed by admin...'
+      case 'SETUP_LIBRARY':
+        return 'Setup your library to get started!'
+      case 'DASHBOARD':
+        return 'Welcome back!'
+      default:
+        return 'Redirecting to subscription...'
+    }
+  }, [loading, step, user])
 
   useEffect(() => {
-    let cancelled = false
+    if (loading || !user) return
 
-    async function checkOnboarding() {
-      try {
-        if (user?.role === 'ADMIN') {
-          setMessage('Welcome back!')
-          setTimeout(() => go(returnTo ?? ROUTES.ADMIN_DASHBOARD), 1000)
-          return
-        }
+    const target = user.role === 'ADMIN'
+      ? ROUTES.ADMIN_DASHBOARD
+      : STEP_ROUTES[step ?? 'SUBSCRIBE']
 
-        const status = await userService.getOnboardingStatus()
-
-        if (cancelled) return
-
-        if (!status.hasSubscription) {
-          setMessage('Redirecting to subscription...')
-          setTimeout(() => go(ROUTES.SUBSCRIBE), 1500)
-        } else if (status.subscription?.status === 'PENDING') {
-          setMessage('Your payment is being reviewed by admin...')
-        } else if (status.subscription?.status === 'REJECTED') {
-          setMessage('Your previous request was rejected. Please resubscribe.')
-          setTimeout(() => go(ROUTES.SUBSCRIBE), 2000)
-        } else if (status.subscription?.status === 'EXPIRED') {
-          setMessage('Your subscription has expired. Please resubscribe.')
-          setTimeout(() => go(ROUTES.SUBSCRIBE), 2000)
-        } else if (status.subscription?.status === 'ACTIVE' && !status.hasLibrary) {
-          setMessage('Setup your library to get started!')
-          setTimeout(() => go(returnTo ?? '/owner/library'), 1500)
-        } else if (status.subscription?.status === 'ACTIVE' && status.hasLibrary) {
-          setMessage('Welcome back!')
-          setTimeout(() => go(returnTo ?? ROUTES.OWNER_DASHBOARD), 1500)
-        } else {
-          setMessage('Something went wrong. Please contact support.')
-        }
-      } catch {
-        if (!cancelled) {
-          toast.error('Session expired. Please login again.')
-          await logout()
-          go(ROUTES.LOGIN)
-        }
-      } finally {
-        if (!cancelled) {
-          setState('redirect')
-        }
-      }
-    }
-
-    const timer = setTimeout(checkOnboarding, 2500)
-    return () => { cancelled = true; clearTimeout(timer) }
-  }, [navigate, logout, user, returnTo, go])
+    const timer = setTimeout(() => navigate(target), 1000)
+    return () => clearTimeout(timer)
+  }, [loading, step, user, navigate])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary-600 to-primary-900">
@@ -118,22 +78,6 @@ export default function Splash({ returnTo, onDone }: SplashProps) {
           <span>{message}</span>
         </div>
       </motion.div>
-
-      {state === 'redirect' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="mt-4"
-        >
-          <button
-            onClick={() => navigate(ROUTES.LOGIN)}
-            className="text-white/50 hover:text-white text-xs underline transition-colors"
-          >
-            Back to login
-          </button>
-        </motion.div>
-      )}
     </div>
   )
 }

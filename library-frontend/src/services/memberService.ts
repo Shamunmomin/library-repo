@@ -3,6 +3,7 @@ import type { Member, MemberPayment, PageResponse } from '../types'
 
 export const memberService = {
   async getAll(params?: { page?: number; size?: number; search?: string; feeStatus?: string }) {
+    console.log("params",params)
     const response = await api.get<PageResponse<Member>>('/members', { params })
     return response.data
   },
