@@ -33,8 +33,8 @@ FROM Member m
 WHERE m.library = :library
 AND (
     :search IS NULL
-    OR m.name LIKE CONCAT('%', :search, '%')
-    OR m.phone LIKE CONCAT('%', :search, '%')
+    OR m.name LIKE :search
+    OR m.phone LIKE :search
 )
 AND (
     :feeStatus IS NULL
