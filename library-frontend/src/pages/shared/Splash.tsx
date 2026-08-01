@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { userService } from '../../services/userService'
@@ -8,38 +8,54 @@ import toast from 'react-hot-toast'
 
 type SplashState = 'loading' | 'redirect'
 
-export default function Splash() {
+interface SplashProps {
+  returnTo?: string
+  onDone?: () => void
+}
+
+export default function Splash({ returnTo, onDone }: SplashProps) {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const [message, setMessage] = useState('Checking your account...')
   const [state, setState] = useState<SplashState>('loading')
+
+  const go = useCallback((path: string) => {
+    onDone?.()
+    navigate(path)
+  }, [navigate, onDone])
 
   useEffect(() => {
     let cancelled = false
 
     async function checkOnboarding() {
       try {
+        if (user?.role === 'ADMIN') {
+          setMessage('Welcome back!')
+          setTimeout(() => go(returnTo ?? ROUTES.ADMIN_DASHBOARD), 1000)
+          return
+        }
+
         const status = await userService.getOnboardingStatus()
 
         if (cancelled) return
 
         if (!status.hasSubscription) {
           setMessage('Redirecting to subscription...')
-          setTimeout(() => navigate(ROUTES.SUBSCRIBE), 1500)
+          setTimeout(() => go(ROUTES.SUBSCRIBE), 1500)
         } else if (status.subscription?.status === 'PENDING') {
           setMessage('Your payment is being reviewed by admin...')
         } else if (status.subscription?.status === 'REJECTED') {
           setMessage('Your previous request was rejected. Please resubscribe.')
-          setTimeout(() => navigate(ROUTES.SUBSCRIBE), 2000)
+          setTimeout(() => go(ROUTES.SUBSCRIBE), 2000)
         } else if (status.subscription?.status === 'EXPIRED') {
           setMessage('Your subscription has expired. Please resubscribe.')
-          setTimeout(() => navigate(ROUTES.SUBSCRIBE), 2000)
+          setTimeout(() => go(ROUTES.SUBSCRIBE), 2000)
         } else if (status.subscription?.status === 'ACTIVE' && !status.hasLibrary) {
           setMessage('Setup your library to get started!')
-          setTimeout(() => navigate('/owner/library'), 1500)
+          setTimeout(() => go(returnTo ?? '/owner/library'), 1500)
         } else if (status.subscription?.status === 'ACTIVE' && status.hasLibrary) {
           setMessage('Welcome back!')
-          setTimeout(() => navigate(ROUTES.OWNER_DASHBOARD), 1500)
+          setTimeout(() => go(returnTo ?? ROUTES.OWNER_DASHBOARD), 1500)
         } else {
           setMessage('Something went wrong. Please contact support.')
         }
@@ -47,7 +63,7 @@ export default function Splash() {
         if (!cancelled) {
           toast.error('Session expired. Please login again.')
           await logout()
-          navigate(ROUTES.LOGIN)
+          go(ROUTES.LOGIN)
         }
       } finally {
         if (!cancelled) {
@@ -58,7 +74,7 @@ export default function Splash() {
 
     const timer = setTimeout(checkOnboarding, 2500)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [navigate, logout])
+  }, [navigate, logout, user, returnTo, go])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary-600 to-primary-900">

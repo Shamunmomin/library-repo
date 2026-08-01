@@ -1,6 +1,6 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthGuard } from './guard/AuthGuard'
 import { ROUTES } from './utils/constants'
@@ -31,12 +31,33 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
 }
 
+let isFreshPageLoad = true
+
+function SplashGate({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth()
+  const location = useLocation()
+  const [splashDone, setSplashDone] = useState(false)
+
+  useEffect(() => {
+    isFreshPageLoad = false
+  }, [])
+
+  const handleDone = useCallback(() => setSplashDone(true), [])
+
+  if (isFreshPageLoad && isAuthenticated && !splashDone) {
+    return <Splash returnTo={location.pathname} onDone={handleDone} />
+  }
+
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
         <SuspenseWrapper>
-          <Routes>
+          <SplashGate>
+            <Routes>
             <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
             <Route path={ROUTES.LOGIN} element={<AuthLayout><Login /></AuthLayout>} />
             <Route path={ROUTES.REGISTER} element={<AuthLayout><Register /></AuthLayout>} />
@@ -95,6 +116,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </SplashGate>
         </SuspenseWrapper>
       </ThemeProvider>
     </AuthProvider>
