@@ -4,6 +4,7 @@ import { floorService } from '../../services/floorService'
 import type { Floor } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 export default function OwnerFloors() {
   const navigate = useNavigate()
@@ -92,7 +93,7 @@ export default function OwnerFloors() {
       ) : (
         <div className="grid gap-4">
           {floors.map(floor => (
-            <div key={floor.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+            <div key={floor.id} onClick={() => navigate(`/owner/floors/${floor.id}/seats`)} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">Floor - {floor.name}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{floor.description}</p>
@@ -102,11 +103,13 @@ export default function OwnerFloors() {
                 <button onClick={() => navigate(`/owner/floors/${floor.id}/seats`)} className="px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs font-medium hover:bg-primary-100 transition-colors">
                   Manage Seats
                 </button>
-                <button onClick={() => startEdit(floor)} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium hover:bg-gray-200 transition-colors">
-                  Edit
+                <button onClick={() => startEdit(floor)} title="Edit" aria-label="Edit" className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium hover:bg-gray-200 transition-colors">
+                  <PencilIcon className="h-4 w-4 sm:hidden" />
+                  <span className="hidden sm:inline">Edit</span>
                 </button>
-                <button onClick={() => setDeleteTarget(floor)} className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs font-medium hover:bg-red-100 transition-colors">
-                  Delete
+                <button onClick={() => setDeleteTarget(floor)} title="Delete" aria-label="Delete" className="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs font-medium hover:bg-red-100 transition-colors">
+                  <TrashIcon className="h-4 w-4 sm:hidden" />
+                  <span className="hidden sm:inline">Delete</span>
                 </button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import type { Member } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 export default function OwnerMembers() {
   const [members, setMembers] = useState<Member[]>([])
@@ -176,9 +177,15 @@ export default function OwnerMembers() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{m.allocatedSeat || '-'}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => startEdit(m)} className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs hover:bg-gray-200">Edit</button>
-                      {m.feeStatus !== 'PAID' && <button onClick={() => handleMarkPaid(m.id)} className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs hover:bg-green-200">Pay</button>}
-                      <button onClick={() => handleDelete(m.id)} className="px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs hover:bg-red-200">Del</button>
+                                            {m.feeStatus !== 'PAID' && <button onClick={() => handleMarkPaid(m.id)} className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs hover:bg-green-200">Pay</button>}
+                      <button onClick={() => startEdit(m)} title="Edit" aria-label="Edit" className="inline-flex items-center px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs hover:bg-gray-200">
+                        <PencilIcon className="h-4 w-4 sm:hidden" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </button>
+                      <button onClick={() => handleDelete(m.id)} title="Delete" aria-label="Delete" className="inline-flex items-center px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs hover:bg-red-200">
+                        <TrashIcon className="h-4 w-4 sm:hidden" />
+                        <span className="hidden sm:inline">Del</span>
+                      </button>
                     </div>
                   </td>
                 </tr>

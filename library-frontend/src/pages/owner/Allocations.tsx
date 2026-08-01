@@ -6,6 +6,7 @@ import { seatService } from '../../services/seatService'
 import type { SeatAllocation, Member, Floor, Seat } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import {  UserMinusIcon } from '@heroicons/react/24/outline'
 
 export default function OwnerAllocations() {
   const [allocations, setAllocations] = useState<SeatAllocation[]>([])
@@ -124,8 +125,9 @@ export default function OwnerAllocations() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{a?.seatNumber}</td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{new Date(a.startDate).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => handleEndAllocation(a.id)} className="px-3 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-medium hover:bg-red-200 transition-colors">
-                      End
+                    <button onClick={() => handleEndAllocation(a.id)}  title="Delete" aria-label="Delete" className="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs font-medium hover:bg-red-100 transition-colors">
+                     <UserMinusIcon className="h-4 w-4 sm:hidden" />
+                      <span className="hidden sm:inline">End</span>
                     </button>
                   </td>
                 </tr>
