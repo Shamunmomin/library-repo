@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { seatService } from '../../services/seatService'
 import { floorService } from '../../services/floorService'
@@ -87,11 +87,35 @@ export default function OwnerSeats() {
   }, [menuPos, showAddMenu])
 
   function openMenu(seat: Seat, e: React.MouseEvent<HTMLButtonElement>) {
+    if (menuPos && selectedSeat && selectedSeat.id === seat.id) {
+      closeMenu()
+      return
+    }
     const rect = e.currentTarget.getBoundingClientRect()
     setSelectedSeat(seat)
     setMenuPos({ top: rect.bottom + 4, left: rect.left })
     triggerRef.current = e.currentTarget
   }
+
+  useLayoutEffect(() => {
+    if (!menuPos || !menuRef.current) return
+    const menu = menuRef.current
+    const menuHeight = menu.offsetHeight
+    const menuWidth = menu.offsetWidth
+    const margin = 4
+    const minTop = window.innerWidth < 1024 ? 60 : margin
+    let top = menuPos.top
+    let left = menuPos.left
+    if (top + menuHeight > window.innerHeight - margin) {
+      top = Math.max(minTop, window.innerHeight - menuHeight - margin)
+    }
+    if (left + menuWidth > window.innerWidth - margin) {
+      left = Math.max(margin, window.innerWidth - menuWidth - margin)
+    }
+    if (top !== menuPos.top || left !== menuPos.left) {
+      setMenuPos({ top, left })
+    }
+  }, [menuPos])
 
   function closeMenu() {
     setSelectedSeat(null)
@@ -304,7 +328,7 @@ export default function OwnerSeats() {
         <div
           ref={menuRef}
           style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 50 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 min-w-[180px]"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 min-w-[180px] max-h-[calc(100vh-8px)] overflow-y-auto"
         >
           <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700">
             {selectedSeat.seatNumber} — {selectedSeat.status}
