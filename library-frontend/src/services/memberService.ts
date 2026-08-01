@@ -47,8 +47,8 @@ export const memberService = {
     return response.data
   },
 
-  async markFeePaid(id: string) {
-    const response = await api.put<Member>(`/members/${id}/mark-paid`)
+  async markFeePaid(id: string, payDate?: string) {
+    const response = await api.put<Member>(`/members/${id}/mark-paid`, { payDate })
     return response.data
   },
 }

@@ -5,6 +5,7 @@ import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
 import com.lab.library.dto.response.PageResponse;
 import com.lab.library.enums.FeeStatus;
+import com.lab.library.exception.BadRequestException;
 import com.lab.library.service.ImageStorageService;
 import com.lab.library.service.MemberService;
 import com.lab.library.service.UserService;
@@ -21,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -105,8 +108,18 @@ public class MemberController {
     }
 
     @PutMapping("/{id}/mark-paid")
-    public ResponseEntity<MemberResponse> markFeePaid(@PathVariable UUID id) {
-        return ResponseEntity.ok(memberService.markFeePaid(id));
+    public ResponseEntity<MemberResponse> markFeePaid(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        LocalDate payDate = null;
+        if (body != null && body.get("payDate") != null) {
+            try {
+                payDate = LocalDate.parse(body.get("payDate").toString());
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Invalid payment date format. Use YYYY-MM-DD");
+            }
+        }
+        return ResponseEntity.ok(memberService.markFeePaid(id, payDate));
     }
 
     @GetMapping("/fee-expired")

@@ -115,17 +115,16 @@ public class MemberService {
     }
 
     @Transactional
-    public MemberResponse markFeePaid(UUID memberId) {
+    public MemberResponse markFeePaid(UUID memberId, LocalDate payDate) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
 
         LocalDate today = LocalDate.now();
-        LocalDate newPaidUpTo;
-        if (member.getPaidUpTo() == null || member.getPaidUpTo().isBefore(today)) {
-            newPaidUpTo = today.plusMonths(1);
-        } else {
-            newPaidUpTo = member.getPaidUpTo().plusMonths(1);
-        }
+        LocalDate paymentDate = payDate != null ? payDate : today;
+        LocalDate base = (member.getPaidUpTo() != null && member.getPaidUpTo().isAfter(today))
+                ? member.getPaidUpTo()
+                : (paymentDate.isAfter(today) ? paymentDate : today);
+        LocalDate newPaidUpTo = base.plusMonths(1);
         member.setPaidUpTo(newPaidUpTo);
         member.setFeeStatus(FeeStatus.PAID);
         member = memberRepository.save(member);
@@ -134,11 +133,11 @@ public class MemberService {
                 .member(member)
                 .amount(member.getFeeAmount())
                 .paidUpTo(newPaidUpTo)
-                .paymentDate(LocalDateTime.now())
+                .paymentDate(paymentDate.atStartOfDay())
                 .build();
         memberPaymentRepository.save(payment);
 
-        log.info("Member fee marked paid: {}, paid up to {}", member.getName(), newPaidUpTo);
+        log.info("Member fee marked paid: {}, paid up to {}, payment date {}", member.getName(), newPaidUpTo, paymentDate);
         return buildResponse(member);
     }
 

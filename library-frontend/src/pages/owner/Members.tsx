@@ -23,6 +23,16 @@ export default function OwnerMembers() {
 
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
+  const [payTarget, setPayTarget] = useState<Member | null>(null)
+  const [payDate, setPayDate] = useState('')
+  const [paying, setPaying] = useState(false)
+
+  function todayStr() {
+    const d = new Date()
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    return local.toISOString().slice(0, 10)
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300)
     return () => clearTimeout(timer)
@@ -89,9 +99,23 @@ export default function OwnerMembers() {
     catch { toast.error('Failed to delete') }
   }
 
-  async function handleMarkPaid(id: string) {
-    try { await memberService.markFeePaid(id); toast.success('Fee marked paid'); loadMembers() }
-    catch { toast.error('Failed to update fee status') }
+  function openPayModal(m: Member) {
+    setPayTarget(m)
+    setPayDate(todayStr())
+  }
+
+  async function confirmPayment() {
+    if (!payTarget || !payDate) return
+    setPaying(true)
+    try {
+      await memberService.markFeePaid(payTarget.id, payDate)
+      toast.success('Fee marked paid')
+      setPayTarget(null)
+      loadMembers()
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg || 'Failed to update fee status')
+    } finally { setPaying(false) }
   }
 
   const feeColors: Record<string, string> = {
@@ -177,7 +201,7 @@ export default function OwnerMembers() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{m.allocatedSeat || '-'}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                                            {m.feeStatus !== 'PAID' && <button onClick={() => handleMarkPaid(m.id)} className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs hover:bg-green-200">Pay</button>}
+                                            {m.feeStatus !== 'PAID' && <button onClick={() => openPayModal(m)} className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs hover:bg-green-200">Pay</button>}
                       <button onClick={() => startEdit(m)} title="Edit" aria-label="Edit" className="inline-flex items-center px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs hover:bg-gray-200">
                         <PencilIcon className="h-4 w-4 sm:hidden" />
                         <span className="hidden sm:inline">Edit</span>
@@ -217,6 +241,43 @@ export default function OwnerMembers() {
           </button>
         </div>
       </div>
+
+      {payTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !paying && setPayTarget(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Confirm Payment</h2>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+              Are you sure <strong className="text-gray-900 dark:text-white">{payTarget.name}</strong> pays{' '}
+              <strong className="text-gray-900 dark:text-white">₹{payTarget.feeAmount || 0}</strong> for the current month?
+            </p>
+            <div className="mt-4">
+              <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Payment Date</label>
+              <input
+                type="date"
+                value={payDate}
+                onChange={e => setPayDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div className="mt-5 flex gap-3 justify-end">
+              <button
+                onClick={() => setPayTarget(null)}
+                disabled={paying}
+                className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmPayment}
+                disabled={paying || !payDate}
+                className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
+              >
+                {paying ? 'Confirming...' : 'Confirm Payment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
