@@ -3,6 +3,7 @@ package com.lab.library.controller;
 import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
+import com.lab.library.dto.response.PageResponse;
 import com.lab.library.enums.FeeStatus;
 import com.lab.library.service.ImageStorageService;
 import com.lab.library.service.MemberService;
@@ -80,9 +81,13 @@ public class MemberController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MemberResponse>> getAll() {
+    public ResponseEntity<PageResponse<MemberResponse>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) FeeStatus feeStatus) {
         UUID userId = userService.getCurrentUserId();
-        return ResponseEntity.ok(memberService.getByLibrary(userId));
+        return ResponseEntity.ok(memberService.getByLibraryPaginated(userId, search, feeStatus, page, size));
     }
 
     @GetMapping("/{id}")

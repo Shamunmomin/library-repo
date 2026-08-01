@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { CheckIcon } from '@heroicons/react/24/solid'
 import { subscriptionService } from '../../services/subscriptionService'
 import { SUBSCRIPTION_PACKAGES, ROUTES } from '../../utils/constants'
+import scannerImg from '../../../public/scanner.jpeg';
 import toast from 'react-hot-toast'
 
 export default function Subscribe() {
@@ -57,8 +58,9 @@ export default function Subscribe() {
           </p>
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Please wait while admin reviews your payment. This usually takes 24-48 hours.
+              Please wait while admin reviews your payment. This usually takes 5 minutes to 10 minutes.
             </p>
+            <p>other wise please call this number +91 7796849206</p>
           </div>
           <button
             onClick={() => navigate(ROUTES.SPLASH)}
@@ -129,12 +131,12 @@ export default function Subscribe() {
             <div className="text-center">
               <div className="w-40 h-40 bg-white dark:bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2 border border-gray-200 dark:border-gray-600">
                 <div className="text-center">
-                  <div className="text-3xl mb-1">📱</div>
+                  <div className="text-3xl mb-1"><img src={scannerImg} alt="Scanner" /></div>
                   <div className="text-xs text-gray-500">Scan to Pay</div>
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Pay ₹{selected === 'BASE' ? SUBSCRIPTION_PACKAGES.BASE.price : SUBSCRIPTION_PACKAGES.PRO.price} via UPI
+                <br /> <br />Pay ₹{selected === 'BASE' ? SUBSCRIPTION_PACKAGES.BASE.price : SUBSCRIPTION_PACKAGES.PRO.price} via UPI
               </p>
             </div>
           </div>

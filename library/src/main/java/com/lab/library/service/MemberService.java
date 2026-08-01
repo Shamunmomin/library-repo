@@ -3,6 +3,7 @@ package com.lab.library.service;
 import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
+import com.lab.library.dto.response.PageResponse;
 import com.lab.library.entity.Library;
 import com.lab.library.entity.Member;
 import com.lab.library.entity.MemberPayment;
@@ -18,6 +19,10 @@ import com.lab.library.repository.MemberRepository;
 import com.lab.library.repository.SeatAllocationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -147,7 +152,7 @@ public class MemberService {
                         .paymentDate(p.getPaymentDate())
                         .createdAt(p.getCreatedAt())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<MemberResponse> getExpiredFeeMembers(UUID userId) {
@@ -155,7 +160,7 @@ public class MemberService {
         Library library = libraryService.getLibraryByUser(user);
         return memberRepository.findExpiredFeeMembers(library, LocalDate.now()).stream()
                 .map(this::buildResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<MemberResponse> getByLibrary(UUID userId) {
@@ -163,7 +168,30 @@ public class MemberService {
         Library library = libraryService.getLibraryByUser(user);
         return memberRepository.findByLibraryOrderByNameAsc(library).stream()
                 .map(this::buildResponse)
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<MemberResponse> getByLibraryPaginated(UUID userId, String search, FeeStatus feeStatus, int page, int size) {
+        User user = userService.getById(userId);
+        Library library = libraryService.getLibraryByUser(user);
+
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        int safePage = Math.max(page, 0);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by("name").ascending());
+
+        Page<Member> memberPage = memberRepository.searchMembers(library, search, feeStatus, pageable);
+        List<MemberResponse> content = memberPage.getContent().stream()
+                .map(this::buildResponse)
+                .toList();
+
+        return PageResponse.<MemberResponse>builder()
+                .content(content)
+                .page(memberPage.getNumber())
+                .size(memberPage.getSize())
+                .totalElements(memberPage.getTotalElements())
+                .totalPages(memberPage.getTotalPages())
+                .build();
     }
 
     public List<MemberResponse> getByFeeStatus(UUID userId, FeeStatus feeStatus) {
@@ -171,7 +199,7 @@ public class MemberService {
         Library library = libraryService.getLibraryByUser(user);
         return memberRepository.findByLibraryAndFeeStatus(library, feeStatus).stream()
                 .map(this::buildResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Member getMemberEntity(UUID memberId) {

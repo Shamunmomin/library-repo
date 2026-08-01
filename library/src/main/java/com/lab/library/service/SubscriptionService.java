@@ -135,8 +135,10 @@ public class SubscriptionService {
             Payment payment = Payment.builder()
                     .user(subscription.getUser())
                     .amount(amount)
+                    .subscriptionType(subscription.getPackageType())
                     .paymentDate(LocalDateTime.now())
-                    .paymentMethod("screenshot")
+                    .subscriptionEndDate(subscription.getEndDate())
+                    .paymentMethod("Online Transaction")
                     .status(PaymentStatus.COMPLETED)
                     .build();
             paymentRepository.save(payment);

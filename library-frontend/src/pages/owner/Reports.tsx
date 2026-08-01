@@ -21,10 +21,10 @@ export default function OwnerReports() {
   useEffect(() => {
     Promise.all([
       subscriptionService.getMySubscription(),
-      memberService.getAll(),
+      memberService.getAll({ page: 0, size: 100 }),
     ]).then(([sub, mem]) => {
       setSubscription(sub)
-      setMembers(mem)
+      setMembers(mem.content)
     }).catch(() => {})
     .finally(() => setLoading(false))
   }, [])

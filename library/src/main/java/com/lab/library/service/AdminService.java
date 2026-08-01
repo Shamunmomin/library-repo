@@ -74,7 +74,7 @@ public class AdminService {
                     return buildLibraryDetail(lib, sub);
                 })
                 .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public LibraryDetailResponse getLibraryDetail(UUID id) {

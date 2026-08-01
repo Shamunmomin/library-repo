@@ -12,18 +12,37 @@ export default function OwnerMembers() {
   const [editId, setEditId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'ALL' | 'PAID' | 'UNPAID'>('ALL')
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
 
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', feeAmount: '', joinDate: '' })
   const [photo, setPhoto] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => { loadMembers() }, [])
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => { setPage(0) }, [debouncedSearch, filter])
+
+  useEffect(() => { loadMembers() }, [page, debouncedSearch, filter])
 
   async function loadMembers() {
     setLoading(true)
     try {
-      const data = await memberService.getAll()
-      setMembers(data)
+      const data = await memberService.getAll({
+        page,
+        size: 10,
+        search: debouncedSearch || undefined,
+        feeStatus: filter === 'ALL' ? undefined : filter,
+      })
+      setMembers(data.content)
+      setTotalPages(data.totalPages)
+      setTotalElements(data.totalElements)
     } catch { toast.error('Failed to load members') }
     finally { setLoading(false) }
   }
@@ -74,13 +93,6 @@ export default function OwnerMembers() {
     catch { toast.error('Failed to update fee status') }
   }
 
-  const filtered = members.filter(m => {
-    if (filter === 'PAID' && m.feeStatus !== 'PAID') return false
-    if (filter === 'UNPAID' && m.feeStatus !== 'UNPAID') return false
-    if (search && !m.name.toLowerCase().includes(search.toLowerCase()) && !m.phone.includes(search)) return false
-    return true
-  })
-
   const feeColors: Record<string, string> = {
     PAID: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     UNPAID: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
@@ -127,7 +139,7 @@ export default function OwnerMembers() {
         </form>
       )}
 
-      {filtered.length === 0 ? (
+      {members.length === 0 ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No members found</div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
@@ -143,7 +155,7 @@ export default function OwnerMembers() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(m => (
+              {members.map(m => (
                 <tr key={m.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -170,6 +182,29 @@ export default function OwnerMembers() {
           </table>
         </div>
       )}
+
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-xs text-gray-500 dark:text-gray-400">{totalElements} member{totalElements === 1 ? '' : 's'}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            Page {totalPages === 0 ? 0 : page + 1} of {Math.max(totalPages, 1)}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

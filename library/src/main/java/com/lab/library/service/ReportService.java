@@ -159,27 +159,33 @@ public class ReportService {
 
             Paragraph titlePara = new Paragraph("Platform Payment Report", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18));
             titlePara.setAlignment(Element.ALIGN_CENTER);
+            titlePara.setSpacingAfter(4f);
             document.add(titlePara);
 
-            Paragraph datePara = new Paragraph("Period: " + startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " to " + endDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMMM-yyyy");
+           String formattedStartDate = startDate.format(formatter);
+           String formattedEndDate = endDate.format(formatter);
+
+            Paragraph datePara = new Paragraph("Period: " +formattedStartDate + " to " + formattedEndDate,
                     FontFactory.getFont(FontFactory.HELVETICA, 10));
             datePara.setAlignment(Element.ALIGN_CENTER);
             document.add(datePara);
             document.add(new Paragraph(" "));
 
             List<Payment> payments = paymentRepository.findAllByOrderByCreatedAtDesc();
-            PdfPTable table = new PdfPTable(6);
+            PdfPTable table = new PdfPTable(7);
             table.setWidthPercentage(100);
-            addTableHeader(table, "User ID", "Amount", "Method", "Transaction ID", "Status", "Date");
+            addTableHeader(table, "User Name","Phone", "Amount","Subscription", "Status", "Payment Date","Subscription EndDate");
 
             for (Payment p : payments) {
                 addTableCell(table,
-                        p.getUser() != null ? p.getUser().getEmail() : "-",
+                        p.getUser() != null ? p.getUser().getName() : "-",
+                        p.getUser() != null ? p.getUser().getPhone() : "-",
                         p.getAmount() != null ? "Rs." + p.getAmount().toString() : "Rs.0",
-                        p.getPaymentMethod() != null ? p.getPaymentMethod() : "-",
-                        p.getTransactionId() != null ? p.getTransactionId() : "-",
+                        p.getSubscriptionType() != null ? p.getSubscriptionType().name() : "-",
                         p.getStatus().name(),
-                        p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString() : "-");
+                        p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString(): "-",
+                        p.getSubscriptionEndDate() != null ? p.getSubscriptionEndDate().toLocalDate().toString(): "-");
             }
 
             document.add(table);

@@ -1,6 +1,7 @@
 package com.lab.library.entity;
 
 import com.lab.library.enums.PaymentStatus;
+import com.lab.library.enums.SubscriptionPackage;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -29,14 +30,18 @@ public class Payment {
     @Column(nullable = false)
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subscription_type")
+    private SubscriptionPackage subscriptionType;
+
+    @Column(name = "subscription_end_date")
+    private LocalDateTime subscriptionEndDate;
+
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
     @Column(name = "payment_method")
     private String paymentMethod;
-
-    @Column(name = "transaction_id")
-    private String transactionId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

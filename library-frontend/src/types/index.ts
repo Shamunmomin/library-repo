@@ -78,6 +78,14 @@ export interface Seat {
 
 export type FeeStatus = 'PAID' | 'UNPAID' | 'PARTIAL'
 
+export interface PageResponse<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
 export interface MemberPayment {
   id: string
   memberId: string
@@ -120,11 +128,12 @@ export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
 
 export interface Payment {
   id: string
-  userId: string
+  user: User
   amount: number
+  subscriptionType: string
+  subscriptionEndDate: string
   paymentDate: string
   paymentMethod: string
-  transactionId: string
   status: PaymentStatus
   createdAt: string
 }

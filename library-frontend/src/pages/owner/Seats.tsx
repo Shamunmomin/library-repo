@@ -47,12 +47,12 @@ export default function OwnerSeats() {
       const [f, s, allMembers, activeAllocs] = await Promise.all([
         floorService.getById(floorId!),
         seatService.getByFloor(floorId!),
-        memberService.getAll(),
+        memberService.getAll({ page: 0, size: 100 }),
         allocationService.getActive(),
       ])
       setFloor(f)
       setSeats(s)
-      setMembers(allMembers)
+      setMembers(allMembers.content)
       const seatMap: Record<string, SeatAllocation> = {}
       const memberMap: Record<string, SeatAllocation> = {}
       activeAllocs.forEach(a => { seatMap[a.seatId] = a; memberMap[a.memberId] = a })
