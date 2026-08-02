@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { memberService } from '../../services/memberService'
-import type { Member } from '../../types'
+import { subscriptionService } from '../../services/subscriptionService'
+import type { Member, Subscription } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ProtectedImage from '../../components/ProtectedImage'
 import toast from 'react-hot-toast'
@@ -10,6 +11,7 @@ import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 export default function OwnerMembers() {
   const navigate = useNavigate()
   const [members, setMembers] = useState<Member[]>([])
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -82,6 +84,12 @@ export default function OwnerMembers() {
 
   useEffect(() => { setPage(0) }, [debouncedSearch, filter])
 
+  useEffect(() => {
+    subscriptionService.getMySubscription()
+      .then(setSubscription)
+      .catch(() => {})
+  }, [])
+
   useEffect(() => { loadMembers() }, [page, debouncedSearch, filter])
 
   async function loadMembers() {
@@ -148,6 +156,14 @@ export default function OwnerMembers() {
     catch { toast.error('Failed to delete') }
   }
 
+  function openHistory(m: Member) {
+    if (!isPro) {
+      toast.error('Payment history is only available for Pro plan subscribers')
+      return
+    }
+    navigate(`/owner/members/${m.id}/payments`)
+  }
+
   function openPayModal(m: Member) {
     setPayTarget(m)
     setPayDate(todayStr())
@@ -183,6 +199,8 @@ export default function OwnerMembers() {
     PARTIAL: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
     EXPIRED: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
   }
+
+  const isPro = subscription?.packageType === 'PRO' && subscription?.status === 'ACTIVE'
 
   if (loading) return <LoadingSpinner />
 
@@ -275,7 +293,7 @@ export default function OwnerMembers() {
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                                             {m.effectiveFeeStatus !== 'PAID' && <button onClick={() => openPayModal(m)} className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs hover:bg-green-200">Pay</button>}
-                      <button onClick={() => navigate(`/owner/members/${m.id}/payments`)} title="Payment History" aria-label="Payment History" className="inline-flex items-center px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs hover:bg-blue-200">
+                      <button onClick={() => openHistory(m)} title="Payment History" aria-label="Payment History" className="inline-flex items-center px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs hover:bg-blue-200">
                         <span className="hidden sm:inline">History</span>
                         <span className="sm:hidden">H</span>
                       </button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { memberService } from '../../services/memberService'
+import { subscriptionService } from '../../services/subscriptionService'
 import type { Member, MemberPayment } from '../../types'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ProtectedImage from '../../components/ProtectedImage'
@@ -12,6 +13,7 @@ export default function MemberPaymentHistory() {
   const [member, setMember] = useState<Member | null>(null)
   const [payments, setPayments] = useState<MemberPayment[]>([])
   const [loading, setLoading] = useState(true)
+  const [blocked, setBlocked] = useState(false)
 
   const [voidTarget, setVoidTarget] = useState<MemberPayment | null>(null)
   const [voidReason, setVoidReason] = useState('')
@@ -30,9 +32,38 @@ export default function MemberPaymentHistory() {
   }
 
   useEffect(() => {
-    if (!memberId) return
-    loadData(memberId)
+    subscriptionService.getMySubscription()
+      .then(sub => {
+        const isPro = sub?.packageType === 'PRO' && sub?.status === 'ACTIVE'
+        if (!isPro) {
+          toast.error('Payment history is only available for Pro plan subscribers')
+          setBlocked(true)
+          setLoading(false)
+          return
+        }
+        if (!memberId) return
+        loadData(memberId)
+      })
+      .catch(() => {
+        toast.error('Payment history is only available for Pro plan subscribers')
+        setBlocked(true)
+        setLoading(false)
+      })
   }, [memberId])
+
+  if (loading) return <LoadingSpinner />
+
+  if (blocked) {
+    return (
+      <div className="text-center py-16">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Pro Feature</h1>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Payment history is only available for Pro plan subscribers.</p>
+        <button onClick={() => navigate('/owner/members')} className="mt-4 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium">
+          Go to Members
+        </button>
+      </div>
+    )
+  }
 
   async function confirmVoid() {
     if (!memberId || !voidTarget || !voidReason.trim()) return
