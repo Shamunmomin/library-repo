@@ -138,6 +138,7 @@ export default function OwnerMembers() {
           name: form.name.trim(), email: form.email.trim() || undefined,
           phone: form.phone.trim(), address: form.address.trim() || undefined,
           feeAmount: form.feeAmount ? Number(form.feeAmount) : undefined,
+          feeCycle: form.feeCycle,
           photo: photo || undefined,
           joinDate: form.joinDate || undefined,
         })

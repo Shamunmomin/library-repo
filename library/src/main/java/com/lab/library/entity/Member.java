@@ -63,8 +63,7 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(name = "fee_cycle", nullable = false)
     @ColumnDefault("'MONTHLY'")
-    @Builder.Default
-    private FeeCycle feeCycle = FeeCycle.MONTHLY;
+    private FeeCycle feeCycle;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "fee_status", nullable = false)

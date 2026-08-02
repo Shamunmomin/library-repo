@@ -1,8 +1,8 @@
 import api from './axios'
-import type { Member, MemberPayment, PageResponse, PaymentMethod } from '../types'
+import type { FeeStatus, Member, MemberPayment, PageResponse, PaymentMethod } from '../types'
 
 export const memberService = {
-  async getAll(params?: { page?: number; size?: number; search?: string; feeStatus?: string }) {
+  async getAll(params?: { page?: number; size?: number; search?: string; feeStatus?: FeeStatus }) {
     const response = await api.get<PageResponse<Member>>('/members', { params })
     return response.data
   },

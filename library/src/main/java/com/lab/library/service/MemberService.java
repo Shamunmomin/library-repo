@@ -90,6 +90,18 @@ public class MemberService {
                 .build();
 
         member = memberRepository.save(member);
+
+        boolean hasFee = feeAmount != null && feeAmount.compareTo(BigDecimal.ZERO) > 0;
+        if (hasFee) {
+            FeeCycle cycle = member.getFeeCycle() != null ? member.getFeeCycle() : FeeCycle.MONTHLY;
+            LocalDate paidUpTo = joinDate.plusMonths(cycle.getMonths());
+            member.setPaidUpTo(paidUpTo);
+            member.setFeeStatus(FeeStatus.PAID);
+            memberPaymentRepository.save(buildPayment(member, joinDate, paidUpTo, feeAmount,
+                    LocalDate.now(), null, userId, null));
+            log.info("Initial fee payment recorded for member {}: paid up to {}", member.getName(), paidUpTo);
+        }
+
         log.info("Member created: {} in library: {}", member.getName(), library.getName());
         return buildResponse(member);
     }
@@ -180,18 +192,8 @@ public class MemberService {
         BigDecimal paidAmount = amount != null ? amount : member.getFeeAmount();
         if (paidAmount == null) paidAmount = BigDecimal.ZERO;
 
-        MemberPayment payment = MemberPayment.builder()
-                .member(member)
-                .amount(paidAmount)
-                .periodStart(periodStart)
-                .paidUpTo(periodEnd)
-                .paymentDate(paymentDate.atStartOfDay())
-                .method(method != null ? method : PaymentMethod.CASH)
-                .recordedBy(userId)
-                .receiptNo(generateReceiptNo(member))
-                .remarks(remarks)
-                .status(MemberPaymentStatus.COMPLETED)
-                .build();
+        MemberPayment payment = buildPayment(member, periodStart, periodEnd, paidAmount,
+                paymentDate, method != null ? method : PaymentMethod.CASH, userId, remarks);
         memberPaymentRepository.save(payment);
 
         LocalDate maxPaidUpTo = memberPaymentRepository
@@ -322,6 +324,23 @@ public class MemberService {
             throw new UnauthorizedException("You are not allowed to access this member");
         }
         return member;
+    }
+
+    private MemberPayment buildPayment(Member member, LocalDate periodStart, LocalDate paidUpTo,
+                                       BigDecimal amount, LocalDate paymentDate, PaymentMethod method,
+                                       UUID recordedBy, String remarks) {
+        return MemberPayment.builder()
+                .member(member)
+                .amount(amount)
+                .periodStart(periodStart)
+                .paidUpTo(paidUpTo)
+                .paymentDate(paymentDate != null ? paymentDate.atStartOfDay() : LocalDateTime.now())
+                .method(method)
+                .recordedBy(recordedBy)
+                .receiptNo(generateReceiptNo(member))
+                .remarks(remarks)
+                .status(MemberPaymentStatus.COMPLETED)
+                .build();
     }
 
     private String generateReceiptNo(Member member) {
