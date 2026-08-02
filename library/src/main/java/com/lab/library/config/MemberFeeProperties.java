@@ -1,6 +1,7 @@
 package com.lab.library.config;
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +12,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "app.member-fee")
 public class MemberFeeProperties {
 
-    private String expiryCron = "0 30 6 * * *";
+    @Value("${app.member-fee.expiry-cron}")
+    private String expiryCron;
 
-    private List<Integer> reminderDaysBefore = List.of(3, 1);
+    @Value("#{'${app.member-fee.reminder-days-before}'.split(',')}")
+    private List<Integer> reminderDaysBefore;
 }

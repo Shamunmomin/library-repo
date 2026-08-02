@@ -19,8 +19,9 @@ public class SubscriptionProperties {
     private long gracePeriodDays;
 
     @Value("${app.subscription.expiry-cron}")
-    private String expiryCron = "0 0 6 * * *";
+    private String expiryCron;
 
 
-    private List<Integer> reminderDaysBefore = List.of(3, 1);
+    @Value("#{'${app.subscription.reminder-days-before}'.split(',')}")
+    private List<Integer> reminderDaysBefore ;
 }
