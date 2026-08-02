@@ -4,7 +4,9 @@ import com.lab.library.dto.StoredImage;
 import com.lab.library.dto.response.MemberPaymentResponse;
 import com.lab.library.dto.response.MemberResponse;
 import com.lab.library.dto.response.PageResponse;
+import com.lab.library.enums.FeeCycle;
 import com.lab.library.enums.FeeStatus;
+import com.lab.library.enums.PaymentMethod;
 import com.lab.library.exception.BadRequestException;
 import com.lab.library.service.ImageStorageService;
 import com.lab.library.service.MemberService;
@@ -47,6 +49,7 @@ public class MemberController {
             @RequestParam("phone") String phone,
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "feeAmount", required = false) BigDecimal feeAmount,
+            @RequestParam(value = "feeCycle", required = false) FeeCycle feeCycle,
             @RequestParam(value = "photo", required = false) MultipartFile photo,
             @RequestParam(value = "joinDate", required = true) String joinDate) throws IOException {
 
@@ -54,7 +57,7 @@ public class MemberController {
         StoredImage storedPhoto = photo != null ? imageStorageService.save(photo, "photos") : null;
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(memberService.create(userId, name, email, phone, address, feeAmount, storedPhoto, joinDate));
+                .body(memberService.create(userId, name, email, phone, address, feeAmount, feeCycle, storedPhoto, joinDate));
     }
 
     @PutMapping("/{id}")
@@ -62,19 +65,25 @@ public class MemberController {
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
 
+        FeeCycle feeCycle = body.get("feeCycle") != null
+                ? parseFeeCycle(body.get("feeCycle").toString())
+                : null;
+
         return ResponseEntity.ok(memberService.update(
+                userService.getCurrentUserId(),
                 id,
                 (String) body.get("name"),
                 (String) body.get("email"),
                 (String) body.get("phone"),
                 (String) body.get("address"),
-                body.get("feeAmount") != null ? new BigDecimal(body.get("feeAmount").toString()) : null
+                body.get("feeAmount") != null ? new BigDecimal(body.get("feeAmount").toString()) : null,
+                feeCycle
         ));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        memberService.delete(id);
+        memberService.delete(id, userService.getCurrentUserId());
         return ResponseEntity.noContent().build();
     }
 
@@ -98,7 +107,7 @@ public class MemberController {
 
     @GetMapping("/{id}")
     public ResponseEntity<MemberResponse> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(memberService.getById(id));
+        return ResponseEntity.ok(memberService.getById(userService.getCurrentUserId(), id));
     }
 
     @GetMapping("/filter")
@@ -107,19 +116,47 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getByFeeStatus(userId, FeeStatus.valueOf(feeStatus.toUpperCase())));
     }
 
-    @PutMapping("/{id}/mark-paid")
-    public ResponseEntity<MemberResponse> markFeePaid(
+    @PostMapping("/{id}/payments")
+    public ResponseEntity<MemberResponse> recordPayment(
             @PathVariable UUID id,
             @RequestBody(required = false) Map<String, Object> body) {
         LocalDate payDate = null;
-        if (body != null && body.get("payDate") != null) {
-            try {
-                payDate = LocalDate.parse(body.get("payDate").toString());
-            } catch (DateTimeParseException e) {
-                throw new BadRequestException("Invalid payment date format. Use YYYY-MM-DD");
+        LocalDate paidUpTo = null;
+        PaymentMethod method = null;
+        BigDecimal amount = null;
+        String remarks = null;
+
+        if (body != null) {
+            if (body.get("payDate") != null) {
+                payDate = parseDate(body.get("payDate").toString(), "payDate");
             }
+            if (body.get("paidUpTo") != null) {
+                paidUpTo = parseDate(body.get("paidUpTo").toString(), "paidUpTo");
+            }
+            if (body.get("method") != null) {
+                try {
+                    method = PaymentMethod.valueOf(body.get("method").toString().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new BadRequestException("Invalid payment method");
+                }
+            }
+            if (body.get("amount") != null) {
+                amount = new BigDecimal(body.get("amount").toString());
+            }
+            remarks = body.get("remarks") != null ? body.get("remarks").toString() : null;
         }
-        return ResponseEntity.ok(memberService.markFeePaid(id, payDate));
+
+        return ResponseEntity.ok(memberService.recordPayment(
+                userService.getCurrentUserId(), id, payDate, method, amount, remarks, paidUpTo));
+    }
+
+    @PostMapping("/{id}/payments/{paymentId}/void")
+    public ResponseEntity<MemberPaymentResponse> voidPayment(
+            @PathVariable UUID id,
+            @PathVariable UUID paymentId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String reason = body != null && body.get("reason") != null ? body.get("reason").toString() : null;
+        return ResponseEntity.ok(memberService.voidPayment(userService.getCurrentUserId(), id, paymentId, reason));
     }
 
     @GetMapping("/fee-expired")
@@ -130,7 +167,23 @@ public class MemberController {
 
     @GetMapping("/{id}/payments")
     public ResponseEntity<List<MemberPaymentResponse>> getMemberPayments(@PathVariable UUID id) {
-        return ResponseEntity.ok(memberService.getMemberPayments(id));
+        return ResponseEntity.ok(memberService.getMemberPayments(userService.getCurrentUserId(), id));
+    }
+
+    private FeeCycle parseFeeCycle(String value) {
+        try {
+            return FeeCycle.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid fee cycle. Use MONTHLY, QUARTERLY, HALF_YEARLY or YEARLY");
+        }
+    }
+
+    private LocalDate parseDate(String value, String field) {
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Invalid " + field + " format. Use YYYY-MM-DD");
+        }
     }
 
     private ResponseEntity<byte[]> buildImageResponse(StoredImage image) {

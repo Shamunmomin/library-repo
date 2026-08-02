@@ -77,7 +77,10 @@ export interface Seat {
   createdAt: string
 }
 
-export type FeeStatus = 'PAID' | 'UNPAID' | 'PARTIAL'
+export type FeeStatus = 'PAID' | 'UNPAID' | 'PARTIAL' | 'EXPIRED'
+export type FeeCycle = 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'YEARLY'
+export type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'BANK_TRANSFER'
+export type MemberPaymentStatus = 'COMPLETED' | 'REVERSED'
 
 export interface PageResponse<T> {
   content: T[]
@@ -91,8 +94,16 @@ export interface MemberPayment {
   id: string
   memberId: string
   amount: number
+  periodStart: string | null
   paidUpTo: string
   paymentDate: string
+  method: PaymentMethod | null
+  receiptNo: string | null
+  remarks: string | null
+  status: MemberPaymentStatus
+  reversedBy: string | null
+  reversedAt: string | null
+  reverseReason: string | null
   createdAt: string
 }
 
@@ -107,7 +118,10 @@ export interface Member {
   joinDate: string
   paidUpTo?: string
   feeAmount: number
+  feeCycle: FeeCycle
   feeStatus: FeeStatus
+  effectiveFeeStatus: FeeStatus
+  allocatedSeat: string | null
   createdAt: string
 }
 
@@ -116,7 +130,9 @@ export type AllocationStatus = 'ACTIVE' | 'EXPIRED'
 export interface SeatAllocation {
   id: string
   seatId: string
+  seatNumber: string
   memberId: string
+  memberName: string
   startDate: string
   endDate: string
   status: AllocationStatus

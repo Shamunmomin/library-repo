@@ -133,7 +133,7 @@ export default function OwnerReports() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{m.phone}</td>
                   <td className="px-4 py-3 text-gray-900 dark:text-white">Rs.{m.feeAmount || 0}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${feeStatusColor(m.feeStatus)}`}>{m.feeStatus}</span>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${feeStatusColor(m.effectiveFeeStatus)}`}>{m.effectiveFeeStatus}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{m.joinDate ? new Date(m.joinDate).toLocaleDateString() : '-'}</td>
                 </tr>
@@ -167,6 +167,7 @@ function feeStatusColor(status: string) {
     PAID: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     UNPAID: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     PARTIAL: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+    EXPIRED: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
   }
   return map[status] || ''
 }

@@ -1,8 +1,10 @@
 package com.lab.library.entity;
 
+import com.lab.library.enums.FeeCycle;
 import com.lab.library.enums.FeeStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -59,9 +61,20 @@ public class Member {
     private BigDecimal feeAmount;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "fee_cycle", nullable = false)
+    @ColumnDefault("'MONTHLY'")
+    @Builder.Default
+    private FeeCycle feeCycle = FeeCycle.MONTHLY;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "fee_status", nullable = false)
     @Builder.Default
     private FeeStatus feeStatus = FeeStatus.UNPAID;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private boolean archived = false;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

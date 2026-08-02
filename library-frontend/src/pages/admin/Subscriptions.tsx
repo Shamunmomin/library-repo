@@ -112,10 +112,10 @@ export default function AdminSubscriptions() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                    {new Date(sub.startDate).toLocaleDateString()}
+                    {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : '-'}
                   </td>
                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                    {new Date(sub.endDate).toLocaleDateString()}
+                    {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : '-'}
                   </td>
                   <td className="px-4 py-3">
                     {sub.status === 'PENDING' ? (

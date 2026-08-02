@@ -25,7 +25,9 @@ public class MemberResponse {
     private LocalDate joinDate;
     private LocalDate paidUpTo;
     private BigDecimal feeAmount;
+    private String feeCycle;
     private String feeStatus;
+    private String effectiveFeeStatus;
     private String allocatedSeat;
     private LocalDateTime createdAt;
 }

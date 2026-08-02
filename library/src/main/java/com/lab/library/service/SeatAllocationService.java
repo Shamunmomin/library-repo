@@ -11,11 +11,13 @@ import com.lab.library.exception.BadRequestException;
 import com.lab.library.exception.ResourceNotFoundException;
 import com.lab.library.mapper.SeatAllocationMapper;
 import com.lab.library.repository.SeatAllocationRepository;
+import com.lab.library.service.policy.MemberFeePolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -30,14 +32,19 @@ public class SeatAllocationService {
     private final SeatService seatService;
     private final MemberService memberService;
     private final SeatAllocationMapper allocationMapper;
+    private final MemberFeePolicy memberFeePolicy;
 
     @Transactional
     public SeatAllocationResponse allocate(UUID seatId, UUID memberId, LocalDateTime startDate, LocalDateTime endDate) {
         Seat seat = seatService.getSeatEntity(seatId);
         Member member = memberService.getMemberEntity(memberId);
 
-        if (member.getFeeStatus() != FeeStatus.PAID) {
-            throw new BadRequestException("Member " + member.getName() + " has " + member.getFeeStatus() + " fee status. Please collect fee first.");
+        if (member.isArchived()) {
+            throw new BadRequestException("Member " + member.getName() + " is archived and cannot be allocated a seat.");
+        }
+
+        if (memberFeePolicy.resolveEffectiveStatus(member, LocalDate.now()) != FeeStatus.PAID) {
+            throw new BadRequestException("Member " + member.getName() + " has no active fee coverage. Please collect fee first.");
         }
 
         if (seat.getStatus() != SeatStatus.AVAILABLE) {

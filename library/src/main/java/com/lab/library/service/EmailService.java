@@ -1,5 +1,6 @@
 package com.lab.library.service;
 
+import com.lab.library.entity.Member;
 import com.lab.library.entity.Subscription;
 import com.lab.library.enums.NotificationType;
 import jakarta.mail.internet.MimeMessage;
@@ -44,6 +45,33 @@ public class EmailService {
             log.info("{} email sent for subscription {}", type, subscription.getId());
         } catch (Exception e) {
             log.error("Failed to send {} email for subscription {}: {}", type, subscription.getId(), e.getMessage());
+        }
+    }
+
+    @Async("notificationExecutor")
+    public void sendMemberFeeNotification(Member member, NotificationType type) {
+        if (!mailEnabled) {
+            log.debug("Mail notifications disabled; skipping {} for member {}", type, member.getId());
+            return;
+        }
+        if (member.getEmail() == null || member.getEmail().isBlank()) {
+            log.debug("Member {} has no email; skipping {} notification", member.getId(), type);
+            return;
+        }
+
+        try {
+            String libraryName = member.getLibrary().getName();
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(member.getEmail());
+            helper.setSubject(libraryName + ": " + (type == NotificationType.EXPIRED
+                    ? "Your membership fee has expired"
+                    : "Your membership fee expires soon"));
+            helper.setText(EmailTemplates.renderMemberFee(member, type, libraryName), true);
+            mailSender.send(message);
+            log.info("{} member-fee email sent to {}", type, member.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send {} member-fee email for member {}: {}", type, member.getId(), e.getMessage());
         }
     }
 }

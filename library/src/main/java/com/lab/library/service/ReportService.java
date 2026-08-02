@@ -39,7 +39,7 @@ public class ReportService {
         checkProAccess(userId);
         User user = userService.getById(userId);
         Library library = libraryService.getLibraryByUser(user);
-        List<Member> members = memberRepository.findByLibraryOrderByNameAsc(library);
+        List<Member> members = memberRepository.findByLibraryAndArchivedFalseOrderByNameAsc(library);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
@@ -76,7 +76,7 @@ public class ReportService {
         checkProAccess(userId);
         User user = userService.getById(userId);
         Library library = libraryService.getLibraryByUser(user);
-        List<Member> members = memberRepository.findByLibraryOrderByNameAsc(library);
+        List<Member> members = memberRepository.findByLibraryAndArchivedFalseOrderByNameAsc(library);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4.rotate());

@@ -1,5 +1,5 @@
 import api from './axios'
-import type { Subscription, Library, AdminDashboardStats, LibraryDetail, Payment } from '../types'
+import type { Subscription, AdminDashboardStats, LibraryDetail, Payment } from '../types'
 
 export const adminService = {
   async getDashboardStats() {

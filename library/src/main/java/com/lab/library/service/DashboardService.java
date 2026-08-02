@@ -11,11 +11,13 @@ import com.lab.library.mapper.SeatAllocationMapper;
 import com.lab.library.repository.MemberRepository;
 import com.lab.library.repository.SeatAllocationRepository;
 import com.lab.library.repository.SeatRepository;
+import com.lab.library.service.policy.MemberFeePolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,6 +33,7 @@ public class DashboardService {
     private final MemberRepository memberRepository;
     private final SeatAllocationRepository seatAllocationRepository;
     private final SeatAllocationMapper allocationMapper;
+    private final MemberFeePolicy memberFeePolicy;
 
     public OwnerDashboardStatsResponse getOwnerStats(UUID userId) {
         User user = userService.getById(userId);
@@ -43,8 +46,8 @@ public class DashboardService {
         long pendingDues = memberRepository.countByLibraryAndFeeStatus(library, FeeStatus.UNPAID)
                 + memberRepository.countByLibraryAndFeeStatus(library, FeeStatus.PARTIAL);
 
-        BigDecimal monthlyRevenue = memberRepository.findByLibraryOrderByNameAsc(library).stream()
-                .filter(m -> m.getFeeStatus() == FeeStatus.PAID && m.getFeeAmount() != null)
+        BigDecimal monthlyRevenue = memberRepository.findByLibraryAndArchivedFalseOrderByNameAsc(library).stream()
+                .filter(m -> memberFeePolicy.resolveEffectiveStatus(m, LocalDate.now()) == FeeStatus.PAID && m.getFeeAmount() != null)
                 .map(com.lab.library.entity.Member::getFeeAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

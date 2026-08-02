@@ -186,9 +186,9 @@ export default function OwnerSeats() {
   async function handleAllocate(memberId: string) {
     if (!selectedSeat) return
     const member = members.find(m => m.id === memberId)
-    if (member && member.feeStatus !== 'PAID') {
+    if (member && member.effectiveFeeStatus !== 'PAID') {
       toast(
-        `${member.name} has ${member.feeStatus} fee status. Please collect fee first.`,
+        `${member.name} has ${member.effectiveFeeStatus} fee status. Please collect fee first.`,
         { style: { background: '#d97706', color: '#fff', fontSize: '14px' } }
       )
       return
@@ -420,6 +420,7 @@ function AllocateMemberModal({
     PAID: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     UNPAID: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     PARTIAL: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+    EXPIRED: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
   }
 
   const filtered = members.filter(m =>
@@ -454,17 +455,17 @@ function AllocateMemberModal({
                 key={m.id}
                 onClick={() => onSelect(m.id)}
                 className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  m.feeStatus === 'PAID'
+                  m.effectiveFeeStatus === 'PAID'
                     ? 'hover:bg-gray-50 dark:hover:bg-gray-700'
                     : 'bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-900 dark:text-white">{m.name}</span>
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${feeStatusBadge[m.feeStatus] || ''}`}>{m.feeStatus}</span>
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${feeStatusBadge[m.effectiveFeeStatus] || ''}`}>{m.effectiveFeeStatus}</span>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">{m.phone}{m.email ? ` · ${m.email}` : ''}</div>
-                {m.feeStatus !== 'PAID' && (
+                {m.effectiveFeeStatus !== 'PAID' && (
                   <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">⚠ Fee not paid — allocation blocked</div>
                 )}
               </button>

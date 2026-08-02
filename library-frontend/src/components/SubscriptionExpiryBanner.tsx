@@ -71,7 +71,7 @@ return (
     </p>
 
     <span className="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">
-      Expires {new Date(endDate).toLocaleDateString()}
+      Expires {endDate ? new Date(endDate).toLocaleDateString() : '—'}
     </span>
   </div>
 );

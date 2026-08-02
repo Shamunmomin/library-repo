@@ -40,7 +40,7 @@ export default function OwnerDashboard() {
   async function handleMarkPaid(memberId: string) {
     setPayingMember(memberId)
     try {
-      const updated = await memberService.markFeePaid(memberId)
+      const updated = await memberService.recordPayment(memberId)
       toast.success('Fee marked as paid')
       setExpiredMembers(prev => prev.filter(m => m.id !== memberId))
       setSelectedMember(updated)
@@ -64,9 +64,10 @@ export default function OwnerDashboard() {
   if (!stats) return <div className="text-center py-12 text-gray-500">Failed to load data</div>
 
   const feeData = [
-    { name: 'Paid', value: members.filter(m => m.feeStatus === 'PAID').length },
-    { name: 'Unpaid', value: members.filter(m => m.feeStatus === 'UNPAID').length },
-    { name: 'Partial', value: members.filter(m => m.feeStatus === 'PARTIAL').length },
+    { name: 'Paid', value: members.filter(m => m.effectiveFeeStatus === 'PAID').length },
+    { name: 'Unpaid', value: members.filter(m => m.effectiveFeeStatus === 'UNPAID').length },
+    { name: 'Partial', value: members.filter(m => m.effectiveFeeStatus === 'PARTIAL').length },
+    { name: 'Expired', value: members.filter(m => m.effectiveFeeStatus === 'EXPIRED').length },
   ].filter(d => d.value > 0)
 
   const seatData = [
@@ -231,16 +232,17 @@ export default function OwnerDashboard() {
                 <span className="text-gray-900 dark:text-white">{new Date(selectedMember.joinDate).toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Monthly Fee</span>
+                <span className="text-gray-500 dark:text-gray-400">Cycle Fee</span>
                 <span className="text-gray-900 dark:text-white font-medium">Rs.{selectedMember.feeAmount || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Fee Status</span>
                 <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                  selectedMember.feeStatus === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                  selectedMember.feeStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                  selectedMember.effectiveFeeStatus === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                  selectedMember.effectiveFeeStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                  selectedMember.effectiveFeeStatus === 'EXPIRED' ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
                   'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                }`}>{selectedMember.feeStatus}</span>
+                }`}>{selectedMember.effectiveFeeStatus}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Paid Up To</span>

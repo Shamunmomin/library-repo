@@ -43,9 +43,9 @@ export default function OwnerAllocations() {
   async function handleAllocate() {
     if (!selectedSeat || !selectedMember) { toast.error('Select a seat and member'); return }
     const member = members.find(m => m.id === selectedMember)
-    if (member && member.feeStatus !== 'PAID') {
+    if (member && member.effectiveFeeStatus !== 'PAID') {
       toast(
-        `${member.name} has ${member.feeStatus} fee status. Please collect fee first.`,
+        `${member.name} has ${member.effectiveFeeStatus} fee status. Please collect fee first.`,
         { style: { background: '#d97706', color: '#fff', fontSize: '14px' } }
       )
       return
@@ -95,7 +95,7 @@ export default function OwnerAllocations() {
           </select>
           <select value={selectedMember} onChange={e => setSelectedMember(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-primary-500">
             <option value="">Select Member</option>
-            {members.map(m => <option key={m.id} value={m.id}>{m.name} ({m.feeStatus})</option>)}
+            {members.map(m => <option key={m.id} value={m.id}>{m.name} ({m.effectiveFeeStatus})</option>)}
           </select>
           <button onClick={handleAllocate} disabled={isSubmitting || !selectedSeat || !selectedMember} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
             {isSubmitting ? 'Allocating...' : 'Allocate'}
