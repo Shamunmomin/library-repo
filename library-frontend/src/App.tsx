@@ -17,6 +17,7 @@ const OwnerLibrary = lazy(() => import('./pages/owner/Library'))
 const OwnerFloors = lazy(() => import('./pages/owner/Floors'))
 const OwnerSeats = lazy(() => import('./pages/owner/Seats'))
 const OwnerMembers = lazy(() => import('./pages/owner/Members'))
+const OwnerExpiredMembers = lazy(() => import('./pages/owner/ExpiredMembers'))
 const OwnerAllocations = lazy(() => import('./pages/owner/Allocations'))
 const OwnerReports = lazy(() => import('./pages/owner/Reports'))
 const OwnerMemberPayments = lazy(() => import('./pages/owner/MemberPaymentHistory'))
@@ -86,6 +87,7 @@ export default function App() {
                   <Route path="floors" element={<OwnerFloors />} />
                   <Route path="floors/:floorId/seats" element={<OwnerSeats />} />
                   <Route path="members" element={<OwnerMembers />} />
+                  <Route path="expired-members" element={<OwnerExpiredMembers />} />
                   <Route path="allocations" element={<OwnerAllocations />} />
                   <Route path="reports" element={<OwnerReports />} />
                   <Route path="members/:memberId/payments" element={<OwnerMemberPayments />} />

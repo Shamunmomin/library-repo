@@ -11,6 +11,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +30,7 @@ public class LibraryController {
     private final ImageStorageService imageStorageService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<LibraryResponse> create(
             @RequestParam("name") String name,
             @RequestParam("address") String address,
@@ -43,6 +45,7 @@ public class LibraryController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<LibraryResponse> update(
             @PathVariable UUID id,
             @RequestParam(value = "name", required = false) String name,
@@ -55,6 +58,7 @@ public class LibraryController {
     }
 
     @GetMapping("/my")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<LibraryResponse> getMyLibrary() {
         UUID userId = userService.getCurrentUserId();
         LibraryResponse response = libraryService.getMyLibrary(userId);
@@ -65,11 +69,13 @@ public class LibraryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<LibraryResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(libraryService.getById(id));
     }
 
     @GetMapping("/{id}/icon")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<byte[]> getIcon(@PathVariable UUID id) {
         StoredImage image = libraryService.getLibraryIcon(id);
         return buildImageResponse(image);

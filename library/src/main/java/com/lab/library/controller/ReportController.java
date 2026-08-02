@@ -21,6 +21,7 @@ public class ReportController {
     private final UserService userService;
 
     @GetMapping("/payments")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadPaymentReport(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
@@ -36,6 +37,7 @@ public class ReportController {
     }
 
     @GetMapping("/members")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<byte[]> downloadMemberReport() {
         byte[] pdf = reportService.generateMemberReport(userService.getCurrentUserId());
 
@@ -46,6 +48,7 @@ public class ReportController {
     }
 
     @GetMapping("/utilization")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<byte[]> downloadUtilizationReport() {
         byte[] pdf = reportService.generateUtilizationReport(userService.getCurrentUserId());
 

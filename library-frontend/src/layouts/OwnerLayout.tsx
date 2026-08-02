@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Library', to: 'library' },
   { label: 'Floors', to: 'floors' },
   { label: 'Members', to: 'members' },
+  { label: 'Expired Members', to: 'expired-members' },
   { label: 'Allocations', to: 'allocations' },
   { label: 'Reports', to: 'reports' },
 ]

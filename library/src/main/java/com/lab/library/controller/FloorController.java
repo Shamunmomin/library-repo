@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class FloorController {
     private final UserService userService;
 
     @PostMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<FloorResponse> create(@RequestBody Map<String, String> body) {
         UUID userId = userService.getCurrentUserId();
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -30,6 +32,7 @@ public class FloorController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<FloorResponse> update(
             @PathVariable UUID id,
             @RequestBody Map<String, String> body) {
@@ -37,18 +40,21 @@ public class FloorController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         floorService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<FloorResponse>> getMyFloors() {
         UUID userId = userService.getCurrentUserId();
         return ResponseEntity.ok(floorService.getByLibrary(userId));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<FloorResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(floorService.getById(id));
     }

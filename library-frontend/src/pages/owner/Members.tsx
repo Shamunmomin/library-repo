@@ -19,7 +19,7 @@ export default function OwnerMembers() {
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', feeAmount: '', feeCycle: 'MONTHLY', joinDate: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', monthlyBase: '', feeAmount: '', feeCycle: 'MONTHLY', joinDate: '' })
   const [photo, setPhoto] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -34,6 +34,20 @@ export default function OwnerMembers() {
   const [paying, setPaying] = useState(false)
 
   const CYCLE_MONTHS: Record<string, number> = { MONTHLY: 1, QUARTERLY: 3, HALF_YEARLY: 6, YEARLY: 12 }
+
+  function autoFee(monthly: string, cycle: string) {
+    const m = Number(monthly)
+    if (!m || m <= 0) return ''
+    return String(Math.round(m * (CYCLE_MONTHS[cycle] || 1)))
+  }
+
+  function onMonthlyBaseChange(v: string) {
+    setForm(p => ({ ...p, monthlyBase: v, feeAmount: autoFee(v, p.feeCycle) }))
+  }
+
+  function onCycleChange(v: string) {
+    setForm(p => ({ ...p, feeCycle: v, feeAmount: autoFee(p.monthlyBase, v) }))
+  }
 
   function addMonths(dateStr: string, months: number) {
     const d = new Date(dateStr + 'T00:00:00')
@@ -87,12 +101,19 @@ export default function OwnerMembers() {
   }
 
   function resetForm() {
-    setForm({ name: '', email: '', phone: '', address: '', feeAmount: '', feeCycle: 'MONTHLY', joinDate: '' })
+    setForm({ name: '', email: '', phone: '', address: '', monthlyBase: '', feeAmount: '', feeCycle: 'MONTHLY', joinDate: '' })
     setPhoto(null); setEditId(null); setShowForm(false)
   }
 
   function startEdit(m: Member) {
-    setForm({ name: m.name, email: m.email || '', phone: m.phone, address: m.address || '', feeAmount: String(m.feeAmount || ''), feeCycle: m.feeCycle || 'MONTHLY', joinDate: m.joinDate || '' })
+    const months = CYCLE_MONTHS[m.feeCycle] || 1
+    setForm({
+      name: m.name, email: m.email || '', phone: m.phone, address: m.address || '',
+      monthlyBase: String(Math.round((m.feeAmount || 0) / months)),
+      feeAmount: String(m.feeAmount || ''),
+      feeCycle: m.feeCycle || 'MONTHLY',
+      joinDate: m.joinDate || '',
+    })
     setEditId(m.id); setShowForm(true)
   }
 
@@ -196,13 +217,19 @@ export default function OwnerMembers() {
   </label>
             <input value={form.joinDate} onChange={e => setForm(p => ({ ...p, joinDate: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" type="date" />
           </div>
-            <input value={form.feeAmount} onChange={e => setForm(p => ({ ...p, feeAmount: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Monthly fee" type="number" />
-            <select value={form.feeCycle} onChange={e => setForm(p => ({ ...p, feeCycle: e.target.value }))} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white">
+            <input value={form.monthlyBase} onChange={e => onMonthlyBaseChange(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Monthly fee (base) ₹" type="number" />
+            <select value={form.feeCycle} onChange={e => onCycleChange(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white">
               <option value="MONTHLY">Monthly cycle</option>
               <option value="QUARTERLY">Quarterly cycle</option>
               <option value="HALF_YEARLY">Half-yearly cycle</option>
               <option value="YEARLY">Yearly cycle</option>
             </select>
+            <input value={form.feeAmount} onChange={e => setForm(p => ({ ...p, feeAmount: e.target.value }))} className="col-span-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Total fee for cycle (auto-calculated) ₹" type="number" />
+            {form.monthlyBase && Number(form.monthlyBase) > 0 && (
+              <p className="col-span-2 text-xs text-gray-500 dark:text-gray-400">
+                ₹{Number(form.monthlyBase).toLocaleString()} × {CYCLE_MONTHS[form.feeCycle] || 1} month{CYCLE_MONTHS[form.feeCycle] === 1 ? '' : 's'} = ₹{(Number(form.feeAmount) || 0).toLocaleString()}
+              </p>
+            )}
             {!editId && <input type="file" accept="image/*" onChange={e => setPhoto(e.target.files?.[0] || null)} className="text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary-50 dark:file:bg-primary-900/30 file:text-primary-700 cursor-pointer" />}
           </div>
           <div className="flex gap-2">
@@ -328,7 +355,7 @@ export default function OwnerMembers() {
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white"
                 />
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Set Coverage Until (optional — overrides auto-calc)</label>
                 <input
                   type="date"
@@ -340,7 +367,7 @@ export default function OwnerMembers() {
                 {payOverride && new Date(payOverride) <= new Date(coverageStart(payTarget)) && (
                   <p className="mt-1 text-xs text-red-600 dark:text-red-400">Must be after {new Date(coverageStart(payTarget)).toLocaleDateString()}.</p>
                 )}
-              </div>
+              </div> */}
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Method</label>
                 <select

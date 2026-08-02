@@ -12,6 +12,7 @@ export const ROUTES = {
   OWNER_FLOORS: '/owner/floors',
   OWNER_SEATS: '/owner/seats',
   OWNER_MEMBERS: '/owner/members',
+  OWNER_EXPIRED_MEMBERS: '/owner/expired-members',
   OWNER_ALLOCATIONS: '/owner/allocations',
   OWNER_REPORTS: '/owner/reports',
   OWNER_MEMBER_PAYMENTS: '/owner/members/:memberId/payments',

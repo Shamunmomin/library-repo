@@ -95,7 +95,7 @@ public class MemberController {
 
 
     @GetMapping
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<PageResponse<MemberResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -106,17 +106,20 @@ public class MemberController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<MemberResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(memberService.getById(userService.getCurrentUserId(), id));
     }
 
     @GetMapping("/filter")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<MemberResponse>> getByFeeStatus(@RequestParam("feeStatus") String feeStatus) {
         UUID userId = userService.getCurrentUserId();
         return ResponseEntity.ok(memberService.getByFeeStatus(userId, FeeStatus.valueOf(feeStatus.toUpperCase())));
     }
 
     @PostMapping("/{id}/payments")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<MemberResponse> recordPayment(
             @PathVariable UUID id,
             @RequestBody(required = false) Map<String, Object> body) {
@@ -151,6 +154,7 @@ public class MemberController {
     }
 
     @PostMapping("/{id}/payments/{paymentId}/void")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<MemberPaymentResponse> voidPayment(
             @PathVariable UUID id,
             @PathVariable UUID paymentId,
@@ -160,12 +164,14 @@ public class MemberController {
     }
 
     @GetMapping("/fee-expired")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<MemberResponse>> getFeeExpired() {
         UUID userId = userService.getCurrentUserId();
         return ResponseEntity.ok(memberService.getExpiredFeeMembers(userId));
     }
 
     @GetMapping("/{id}/payments")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<MemberPaymentResponse>> getMemberPayments(@PathVariable UUID id) {
         return ResponseEntity.ok(memberService.getMemberPayments(userService.getCurrentUserId(), id));
     }

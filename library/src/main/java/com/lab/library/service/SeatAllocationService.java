@@ -1,9 +1,7 @@
 package com.lab.library.service;
 
 import com.lab.library.dto.response.SeatAllocationResponse;
-import com.lab.library.entity.Member;
-import com.lab.library.entity.Seat;
-import com.lab.library.entity.SeatAllocation;
+import com.lab.library.entity.*;
 import com.lab.library.enums.AllocationStatus;
 import com.lab.library.enums.FeeStatus;
 import com.lab.library.enums.SeatStatus;
@@ -33,6 +31,8 @@ public class SeatAllocationService {
     private final MemberService memberService;
     private final SeatAllocationMapper allocationMapper;
     private final MemberFeePolicy memberFeePolicy;
+    private final UserService userService;
+    private final LibraryService libraryService;
 
     @Transactional
     public SeatAllocationResponse allocate(UUID seatId, UUID memberId, LocalDateTime startDate, LocalDateTime endDate) {
@@ -96,9 +96,11 @@ public class SeatAllocationService {
     }
 
     public List<SeatAllocationResponse> getActiveAllocations() {
-        return seatAllocationRepository.findByStatusOrderByCreatedAtDesc(AllocationStatus.ACTIVE).stream()
+        User user = userService.getCurrentUser();
+        Library library = libraryService.getLibraryByUser(user);
+        return seatAllocationRepository.findByLibraryAndStatus(library, AllocationStatus.ACTIVE).stream()
                 .map(allocationMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<SeatAllocationResponse> getMemberHistory(UUID memberId) {
