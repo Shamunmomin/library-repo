@@ -121,9 +121,9 @@ public class MemberService {
 
         LocalDate today = LocalDate.now();
         LocalDate paymentDate = payDate != null ? payDate : today;
-        LocalDate base = (member.getPaidUpTo() != null && member.getPaidUpTo().isAfter(today))
+        LocalDate base = (member.getPaidUpTo() != null )
                 ? member.getPaidUpTo()
-                : (paymentDate.isAfter(today) ? paymentDate : today);
+                :  paymentDate;
         LocalDate newPaidUpTo = base.plusMonths(1);
         member.setPaidUpTo(newPaidUpTo);
         member.setFeeStatus(FeeStatus.PAID);
