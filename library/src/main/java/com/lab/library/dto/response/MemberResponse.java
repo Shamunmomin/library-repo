@@ -29,5 +29,6 @@ public class MemberResponse {
     private String feeStatus;
     private String effectiveFeeStatus;
     private String allocatedSeat;
+    private boolean allocated;
     private LocalDateTime createdAt;
 }

@@ -122,6 +122,7 @@ export interface Member {
   feeStatus: FeeStatus
   effectiveFeeStatus: FeeStatus
   allocatedSeat: string | null
+  allocated: boolean
   createdAt: string
 }
 

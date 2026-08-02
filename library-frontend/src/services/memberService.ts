@@ -42,6 +42,11 @@ export const memberService = {
     return response.data
   },
 
+  async getAvailableForAllocation() {
+    const response = await api.get<Member[]>('/members/available')
+    return response.data
+  },
+
   async getMemberPayments(id: string) {
     const response = await api.get<MemberPayment[]>(`/members/${id}/payments`)
     return response.data

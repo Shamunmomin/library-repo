@@ -22,6 +22,22 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
     List<Member> findByLibraryAndArchivedFalseOrderByNameAsc(Library library);
     List<Member> findByLibraryAndArchivedFalseAndFeeStatus(Library library, FeeStatus feeStatus);
 
+    @Query("""
+            SELECT m
+            FROM Member m
+            WHERE m.library = :library
+              AND m.archived = false
+              AND m.isAllocated = false
+              AND m.feeStatus = :feeStatus
+              AND NOT EXISTS (
+                  SELECT sa FROM SeatAllocation sa
+                  WHERE sa.member = m AND sa.status = 'ACTIVE'
+              )
+            ORDER BY m.name ASC
+            """)
+    List<Member> findAvailableForAllocation(@Param("library") Library library,
+                                            @Param("feeStatus") FeeStatus feeStatus);
+
     @Query("SELECT COUNT(m) FROM Member m WHERE m.library = :library AND m.archived = false")
     long countByLibrary(@Param("library") Library library);
 
@@ -60,6 +76,7 @@ AND (
     OR (:feeStatus = 'PARTIAL' AND m.feeStatus = 'PARTIAL' AND m.paidUpTo >= :today)
     OR (:feeStatus = 'UNPAID' AND m.feeStatus = 'UNPAID')
 )
+ORDER BY m.createdAt DESC
 """)
     Page<Member> searchMembers(@Param("library") Library library,
                                @Param("search") String search,

@@ -76,6 +76,11 @@ public class Member {
     @Builder.Default
     private boolean archived = false;
 
+    @Column(name = "is_allocated", nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private boolean isAllocated = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -118,6 +118,12 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getByFeeStatus(userId, FeeStatus.valueOf(feeStatus.toUpperCase())));
     }
 
+    @GetMapping("/available")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<List<MemberResponse>> getAvailableForAllocation() {
+        return ResponseEntity.ok(memberService.getAvailableForAllocation(userService.getCurrentUserId()));
+    }
+
     @PostMapping("/{id}/payments")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<MemberResponse> recordPayment(

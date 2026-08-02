@@ -127,6 +127,7 @@ public class MemberService {
 
         member.setArchived(true);
         member.setFeeStatus(FeeStatus.UNPAID);
+        member.setAllocated(false);
         memberRepository.save(member);
         imageStorageService.delete(member.getPhotoFileName(), "photos");
         log.info("Member archived: {} ({} active allocation(s) ended)", member.getName(), activeAllocations.size());
@@ -261,6 +262,14 @@ public class MemberService {
         User user = userService.getById(userId);
         Library library = libraryService.getLibraryByUser(user);
         return memberRepository.findByLibraryAndArchivedFalseOrderByNameAsc(library).stream()
+                .map(this::buildResponse)
+                .toList();
+    }
+
+    public List<MemberResponse> getAvailableForAllocation(UUID userId) {
+        User user = userService.getById(userId);
+        Library library = libraryService.getLibraryByUser(user);
+        return memberRepository.findAvailableForAllocation(library, FeeStatus.PAID).stream()
                 .map(this::buildResponse)
                 .toList();
     }

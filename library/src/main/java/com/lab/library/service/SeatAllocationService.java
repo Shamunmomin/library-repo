@@ -70,6 +70,8 @@ public class SeatAllocationService {
                 .build();
 
         allocation = seatAllocationRepository.save(allocation);
+
+        member.setAllocated(true);
         seatService.updateStatus(seatId, SeatStatus.OCCUPIED);
 
         log.info("Seat {} allocated to member {}", seat.getSeatNumber(), member.getName());
@@ -89,6 +91,7 @@ public class SeatAllocationService {
         allocation.setEndDate(LocalDateTime.now());
         allocation = seatAllocationRepository.save(allocation);
 
+        allocation.getMember().setAllocated(false);
         seatService.updateStatus(allocation.getSeat().getId(), SeatStatus.AVAILABLE);
 
         log.info("Allocation ended for seat {}", allocation.getSeat().getSeatNumber());

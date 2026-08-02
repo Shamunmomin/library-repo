@@ -23,11 +23,11 @@ export default function OwnerAllocations() {
   useEffect(() => {
     Promise.all([
       allocationService.getActive(),
-      memberService.getAll({ page: 0, size: 100 }),
+      memberService.getAvailableForAllocation(),
       floorService.getMyFloors(),
     ]).then(([a, m, f]) => {
       setAllocations(a)
-      setMembers(m.content)
+      setMembers(m)
       setFloors(f)
     }).catch(() => toast.error('Failed to load data'))
     .finally(() => setLoading(false))
