@@ -91,16 +91,16 @@ public class MemberService {
 
         member = memberRepository.save(member);
 
-        boolean hasFee = feeAmount != null && feeAmount.compareTo(BigDecimal.ZERO) > 0;
-        if (hasFee) {
-            FeeCycle cycle = member.getFeeCycle() != null ? member.getFeeCycle() : FeeCycle.MONTHLY;
-            LocalDate paidUpTo = joinDate.plusMonths(cycle.getMonths());
-            member.setPaidUpTo(paidUpTo);
-            member.setFeeStatus(FeeStatus.PAID);
-            memberPaymentRepository.save(buildPayment(member, joinDate, paidUpTo, feeAmount,
-                    LocalDate.now(), null, userId, null));
-            log.info("Initial fee payment recorded for member {}: paid up to {}", member.getName(), paidUpTo);
-        }
+//        boolean hasFee = feeAmount != null && feeAmount.compareTo(BigDecimal.ZERO) > 0;
+//        if (hasFee) {
+//            FeeCycle cycle = member.getFeeCycle() != null ? member.getFeeCycle() : FeeCycle.MONTHLY;
+//            LocalDate paidUpTo = joinDate.plusMonths(cycle.getMonths());
+//            member.setPaidUpTo(paidUpTo);
+//            member.setFeeStatus(FeeStatus.PAID);
+//            memberPaymentRepository.save(buildPayment(member, joinDate, paidUpTo, feeAmount,
+//                    LocalDate.now(), null, userId, null));
+//            log.info("Initial fee payment recorded for member {}: paid up to {}", member.getName(), paidUpTo);
+//        }
 
         log.info("Member created: {} in library: {}", member.getName(), library.getName());
         return buildResponse(member);
