@@ -15,10 +15,13 @@ public class CorsConfig {
     @Value("${app.notifications.frontend-url}")
     private String allowedOrigins;
 
+    @Value("${app.frontend-url}")
+    private String allowedOrigins2;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins));
+        config.setAllowedOrigins(List.of(allowedOrigins, allowedOrigins2));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
