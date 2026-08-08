@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    base: '/library-repo/',
     server: {
       port: 3000,
       proxy: {
