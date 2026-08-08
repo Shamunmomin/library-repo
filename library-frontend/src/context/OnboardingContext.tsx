@@ -2,7 +2,18 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import type { OnboardingStatus, OnboardingStep, Subscription } from '../types'
 import { userService } from '../services/userService'
+import { authService } from '../services/authService'
 import { useAuth } from './AuthContext'
+
+const SSE_EVENTS_URL = `${import.meta.env.VITE_API_PROXY_TARGET}/api/subscriptions/events`
+
+async function refreshAccessToken() {
+  const refreshToken = sessionStorage.getItem('refreshToken')
+  if (!refreshToken) throw new Error('No refresh token')
+  const data = await authService.refreshToken(refreshToken)
+  sessionStorage.setItem('accessToken', data.accessToken)
+  sessionStorage.setItem('refreshToken', data.refreshToken)
+}
 
 interface OnboardingContextType {
   status: OnboardingStatus | null
@@ -51,15 +62,38 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
       controller = new AbortController()
       try {
-        await fetchEventSource('/api/subscriptions/events', {
-          headers: { Authorization: `Bearer ${token}` },
+        await fetchEventSource(SSE_EVENTS_URL, {
+          fetch: (input, init) => {
+            const token = sessionStorage.getItem('accessToken')
+            const headers = {
+              ...((init?.headers ?? {}) as Record<string, string>),
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            }
+            return window.fetch(input, { ...init, headers })
+          },
           signal: controller.signal,
-          onopen: async () => {
+          onopen: async (response) => {
+            if (!response.ok) {
+              const err = new Error(`SSE connection failed: ${response.status}`)
+              ;(err as Error & { status?: number }).status = response.status
+              throw err
+            }
             // reconnected: status may have changed while offline
             await refresh()
           },
           onmessage: () => {
             refresh()
+          },
+          onerror: (err) => {
+            const status = (err as Error & { status?: number }).status
+            if (status === 401) {
+              refreshAccessToken().catch(() => {
+                sessionStorage.removeItem('accessToken')
+                sessionStorage.removeItem('refreshToken')
+                window.location.href = '/login'
+              })
+            }
+            return 2000
           },
         })
       } catch {
