@@ -2,7 +2,7 @@ FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-COPY target/*.jar libraryjar.jar
+COPY target/libraryjar.jar libraryjar.jar
 
 RUN mvn clean package -DskipTests
 
