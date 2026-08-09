@@ -86,17 +86,14 @@ export default function OwnerAllocations() {
         <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Allocate a Seat</h2>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3">
           <select value={selectedFloor} onChange={e => { setSelectedFloor(e.target.value); setSelectedSeat(''); loadSeats(e.target.value) }} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-primary-500">
-            <option value="">Select Floor</option>
+            <option value="">Select Floor/Room</option>
             {floors.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
           <select value={selectedSeat} onChange={e => setSelectedSeat(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-primary-500" disabled={!selectedFloor}>
             <option value="">Select Seat</option>
             {seats.map(s => <option key={s.id} value={s.id}>{s.seatNumber}</option>)}
           </select>
-          <select value={selectedMember} onChange={e => setSelectedMember(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-primary-500">
-            <option value="">Select Member</option>
-            {members.map(m => <option key={m.id} value={m.id}>{m.name} ({m.effectiveFeeStatus})</option>)}
-          </select>
+          <SearchableMemberSelect members={members} value={selectedMember} onChange={setSelectedMember} />
           <button onClick={handleAllocate} disabled={isSubmitting || !selectedSeat || !selectedMember} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
             {isSubmitting ? 'Allocating...' : 'Allocate'}
           </button>
@@ -135,6 +132,65 @@ export default function OwnerAllocations() {
             </tbody>
           </table></div>
         </div>
+      )}
+    </div>
+  )
+}
+
+function SearchableMemberSelect({ members, value, onChange }: { members: Member[]; value: string; onChange: (id: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const selected = members.find(m => m.id === value)
+  const filtered = members.filter(m =>
+    m.name.toLowerCase().includes(query.toLowerCase()) ||
+    (m.phone && m.phone.toLowerCase().includes(query.toLowerCase()))
+  )
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 flex items-center justify-between gap-2 text-left"
+      >
+        <span className={`truncate ${selected ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+          {selected ? `${selected.name} (${selected.effectiveFeeStatus})` : 'Search & Select Member'}
+        </span>
+        <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search by name or phone"
+              autoFocus
+              className="w-full px-3 py-2 sticky top-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white"
+            />
+            {filtered.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No members found</div>
+            ) : (
+              filtered.map(m => (
+                <button
+                  type="button"
+                  key={m.id}
+                  onClick={() => { onChange(m.id); setOpen(false); setQuery('') }}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${m.id === value ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'}`}
+                >
+                  <span className="truncate">{m.name}</span>
+                  <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded-full ${m.effectiveFeeStatus === 'PAID' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : m.effectiveFeeStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+                    {m.effectiveFeeStatus}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </>
       )}
     </div>
   )
