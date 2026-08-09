@@ -91,7 +91,7 @@ export default function OwnerAllocations() {
           </select>
           <select value={selectedSeat} onChange={e => setSelectedSeat(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-primary-500" disabled={!selectedFloor}>
             <option value="">Select Seat</option>
-            {seats.map(s => <option key={s.id} value={s.id}>{s.seatNumber}</option>)}
+            {[...seats].sort((a, b) => Number(a.seatNumber) - Number(b.seatNumber) || a.seatNumber.localeCompare(b.seatNumber)).map(s => <option key={s.id} value={s.id}>{s.seatNumber}</option>)}
           </select>
           <SearchableMemberSelect members={members} value={selectedMember} onChange={setSelectedMember} />
           <button onClick={handleAllocate} disabled={isSubmitting || !selectedSeat || !selectedMember} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
