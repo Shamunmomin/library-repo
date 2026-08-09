@@ -37,6 +37,11 @@ export const memberService = {
     await api.delete(`/members/${id}`)
   },
 
+  async getAllByLibrary() {
+    const response = await api.get<Member[]>('/members/all')
+    return response.data
+  },
+
   async getFeeExpired() {
     const response = await api.get<Member[]>('/members/fee-expired')
     return response.data

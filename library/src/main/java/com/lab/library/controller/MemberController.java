@@ -111,6 +111,12 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getById(userService.getCurrentUserId(), id));
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<List<MemberResponse>> getAllByLibrary() {
+        return ResponseEntity.ok(memberService.getByLibrary(userService.getCurrentUserId()));
+    }
+
     @GetMapping("/filter")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<List<MemberResponse>> getByFeeStatus(@RequestParam("feeStatus") String feeStatus) {

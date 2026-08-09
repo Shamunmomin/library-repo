@@ -25,12 +25,12 @@ export default function OwnerDashboard() {
   useEffect(() => {
     Promise.all([
       dashboardService.getOwnerStats(),
-      memberService.getAll({ page: 0, size: 10 }),
+      memberService.getAllByLibrary(),
       subscriptionService.getMySubscription(),
       memberService.getFeeExpired(),
     ]).then(([s, m, sub, expired]) => {
       setStats(s)
-      setMembers(m.content)
+      setMembers(m)
       setSubscription(sub)
       setExpiredMembers(expired)
     }).catch(() => toast.error('Failed to load dashboard'))

@@ -60,28 +60,16 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     List<Member> findByPhotoDataIsNullAndPhotoIsNotNull();
 
-    @Query("""
-SELECT m
-FROM Member m
-WHERE m.library = :library
-AND m.archived = false
-AND (
-    :search IS NULL
-    OR m.name LIKE :search
-    OR m.phone LIKE :search
-)
-AND (
-    :feeStatus IS NULL
-    OR (:feeStatus = 'EXPIRED' AND m.paidUpTo IS NOT NULL AND m.paidUpTo < :today)
-    OR (:feeStatus = 'PAID' AND m.paidUpTo IS NOT NULL AND m.paidUpTo >= :today AND m.feeStatus <> 'PARTIAL')
-    OR (:feeStatus = 'PARTIAL' AND m.feeStatus = 'PARTIAL' AND m.paidUpTo >= :today)
-    OR (:feeStatus = 'UNPAID' AND m.feeStatus = 'UNPAID')
-)
-ORDER BY m.createdAt DESC
-""")
+    @Query(value = "SELECT m FROM Member m WHERE m.library = :library " +
+        "AND m.archived = false " +
+        "AND (:search IS NULL OR m.name ILIKE :search OR m.phone ILIKE :search) " +
+        "AND (:feeStatus IS NULL OR m.feeStatus = :feeStatus)",
+        countQuery = "SELECT COUNT(m) FROM Member m WHERE m.library = :library " +
+                     "AND m.archived = false " +
+                     "AND (:search IS NULL OR m.name ILIKE :search OR m.phone ILIKE :search) " +
+                     "AND (:feeStatus IS NULL OR m.feeStatus = :feeStatus)")
     Page<Member> searchMembers(@Param("library") Library library,
                                @Param("search") String search,
                                @Param("feeStatus") FeeStatus feeStatus,
-                               @Param("today") LocalDate today,
                                Pageable pageable);
 }

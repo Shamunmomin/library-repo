@@ -150,7 +150,7 @@ export default function OwnerMembers() {
     } catch (err: unknown) {
        console.log("FULL ERROR:", err);
      const e = err as { response?: { status?: number; data?: { message?: string } } }
-  const msg = e?.response?.status === 400
+  const msg = e?.response?.status === 409
     ? e?.response?.data?.message || 'A member with the same contact details already exists.'
     : e?.response?.data?.message || 'Operation failed'
   toast.error(msg)
@@ -249,7 +249,7 @@ export default function OwnerMembers() {
               <option value="HALF_YEARLY">Half-yearly cycle</option>
               <option value="YEARLY">Yearly cycle</option>
             </select>
-            <input value={form.feeAmount} onChange={e => setForm(p => ({ ...p, feeAmount: e.target.value }))} className="col-span-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Total fee for cycle (auto-calculated) ₹" type="number" />
+            <input value={form.feeAmount} disabled  className="col-span-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm outline-none focus:border-primary-500 text-gray-900 dark:text-white" placeholder="Total fee for cycle (auto-calculated) ₹" type="number" />
             {form.monthlyBase && Number(form.monthlyBase) > 0 && (
               <p className="col-span-2 text-xs text-gray-500 dark:text-gray-400">
                 ₹{Number(form.monthlyBase).toLocaleString()} × {CYCLE_MONTHS[form.feeCycle] || 1} month{CYCLE_MONTHS[form.feeCycle] === 1 ? '' : 's'} = ₹{(Number(form.feeAmount) || 0).toLocaleString()}

@@ -293,7 +293,7 @@ public class MemberService {
 
         String searchTerm = (search != null && !search.isBlank()) ? "%" + search.toLowerCase() + "%" : null;
 
-        Page<Member> memberPage = memberRepository.searchMembers(library, searchTerm, feeStatus, LocalDate.now(), pageable);
+        Page<Member> memberPage = memberRepository.searchMembers(library, searchTerm, feeStatus, pageable);
         List<MemberResponse> content = memberPage.getContent().stream()
                 .map(this::buildResponse)
                 .toList();
