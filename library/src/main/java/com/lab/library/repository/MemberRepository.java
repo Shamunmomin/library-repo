@@ -21,6 +21,7 @@ import java.util.UUID;
 public interface MemberRepository extends JpaRepository<Member, UUID> {
     List<Member> findByLibraryAndArchivedFalseOrderByNameAsc(Library library);
     List<Member> findByLibraryAndArchivedFalseAndFeeStatus(Library library, FeeStatus feeStatus);
+    Member findByEmailAndLibrary(String email, Library library);
 
     @Query("""
             SELECT m

@@ -54,7 +54,7 @@ export default function AdminLibraries() {
             <DetailField label="Owner Email" value={selected.ownerEmail} />
             <DetailField label="Owner Phone" value={selected.ownerPhone} />
             <DetailField label="Subscription" value={`${selected.subscriptionPackage} - ${selected.subscriptionStatus}`} />
-            <DetailField label="Floors" value={String(selected.floorCount)} />
+            <DetailField label="Floors/Rooms" value={String(selected.floorCount)} />
             <DetailField label="Total Seats" value={String(selected.totalSeats)} />
             <DetailField label="Occupied Seats" value={String(selected.occupiedSeats)} />
             <DetailField label="Created" value={new Date(selected.createdAt).toLocaleDateString()} />
@@ -90,7 +90,7 @@ export default function AdminLibraries() {
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Owner</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Subscription</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Floors</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Floors/Rooms</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Seats</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Actions</th>
               </tr>

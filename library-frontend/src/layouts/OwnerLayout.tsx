@@ -8,7 +8,7 @@ import { libraryService } from '../services/libraryService'
 const navItems = [
   { label: 'Dashboard', to: 'dashboard' },
   { label: 'Library', to: 'library' },
-  { label: 'Floors', to: 'floors' },
+  { label: 'Floo/Rooms', to: 'floors' },
   { label: 'Members', to: 'members' },
   { label: 'Expired Members', to: 'expired-members' },
   { label: 'Allocations', to: 'allocations' },

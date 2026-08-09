@@ -186,8 +186,8 @@ export default function OwnerDashboard() {
               <p className="text-xs mt-1 opacity-80">Assign seat to member</p>
             </button>
             <button onClick={() => navigate('/owner/floors')} className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-sm font-medium hover:bg-purple-100 transition-colors text-left">
-              <p className="font-semibold">Manage Floors</p>
-              <p className="text-xs mt-1 opacity-80">Add or edit floors</p>
+              <p className="font-semibold">Manage Floors/Rooms</p>
+              <p className="text-xs mt-1 opacity-80">Add or edit floors/rooms</p>
             </button>
             <button onClick={() => navigate('/owner/reports')} className={`p-3 rounded-lg text-sm font-medium transition-colors text-left ${isPro ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 hover:bg-amber-100' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'}`}>
               <p className="font-semibold">{isPro ? 'View Reports' : 'Reports (Pro)'}</p>

@@ -104,7 +104,9 @@ export default function OwnerMembers() {
       setMembers(data.content)
       setTotalPages(data.totalPages)
       setTotalElements(data.totalElements)
-    } catch { toast.error('Failed to load members') }
+    } catch (error: unknown) {
+      toast.error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to load members')
+    }
     finally { setLoading(false) }
   }
 
@@ -146,8 +148,12 @@ export default function OwnerMembers() {
       }
       resetForm(); loadMembers()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      toast.error(msg || 'Operation failed')
+       console.log("FULL ERROR:", err);
+     const e = err as { response?: { status?: number; data?: { message?: string } } }
+  const msg = e?.response?.status === 400
+    ? e?.response?.data?.message || 'A member with the same contact details already exists.'
+    : e?.response?.data?.message || 'Operation failed'
+  toast.error(msg)
     } finally { setIsSubmitting(false) }
   }
 

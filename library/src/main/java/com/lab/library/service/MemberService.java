@@ -16,6 +16,7 @@ import com.lab.library.enums.MemberPaymentStatus;
 import com.lab.library.enums.PaymentMethod;
 import com.lab.library.enums.SeatStatus;
 import com.lab.library.exception.BadRequestException;
+import com.lab.library.exception.DuplicateResourceException;
 import com.lab.library.exception.ResourceNotFoundException;
 import com.lab.library.exception.UnauthorizedException;
 import com.lab.library.mapper.MemberMapper;
@@ -62,6 +63,11 @@ public class MemberService {
                                   StoredImage photo, String joinDateStr) {
         User user = userService.getById(userId);
         Library library = libraryService.getLibraryByUser(user);
+
+        Member existingMember = memberRepository.findByEmailAndLibrary(email,library);
+        if (existingMember != null) {
+            throw new DuplicateResourceException("Member with the same name already exists in this library");
+        }
 
         LocalDate joinDate;
         try {

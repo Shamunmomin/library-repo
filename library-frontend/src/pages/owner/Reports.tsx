@@ -105,7 +105,7 @@ export default function OwnerReports() {
         />
         <ReportCard
           title="Seat Utilization"
-          description="Floor-wise seat occupancy and availability report"
+          description="Floor/Room-wise seat occupancy and availability report"
           icon="S"
           isPro={isPro}
           downloading={downloading === 'utilization'}

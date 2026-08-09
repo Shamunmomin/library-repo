@@ -54,7 +54,7 @@ export const SUBSCRIPTION_PACKAGES = {
     price: 999,
     features: [
       'Up to 2 Libraries',
-      'Multiple Floors',
+      'Multiple Floors/Rooms',
       'Unlimited Seats',
       'Member Management',
       'Seat Allocation',

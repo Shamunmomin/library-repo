@@ -32,14 +32,14 @@ export default function OwnerFloors() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) { toast.error('Floor name is required'); return }
+    if (!name.trim()) { toast.error('Floor/Room name is required'); return }
     try {
       if (editId) {
         await floorService.update(editId, name.trim(), description.trim())
-        toast.success('Floor updated')
+        toast.success('Floor/Room updated')
       } else {
         await floorService.create(name.trim(), description.trim())
-        toast.success('Floor created')
+        toast.success('Floor/Room created')
       }
       resetForm(); loadFloors()
     } catch (err: unknown) {
@@ -53,12 +53,12 @@ export default function OwnerFloors() {
     setDeleting(true)
     try {
       await floorService.delete(deleteTarget.id)
-      toast.success('Floor deleted')
+      toast.success('Floor/Room deleted')
       setDeleteTarget(null)
       loadFloors()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      toast.error(msg || 'Failed to delete floor')
+      toast.error(msg || 'Failed to delete floor/Room')
     } finally { setDeleting(false) }
   }
 
@@ -71,9 +71,9 @@ export default function OwnerFloors() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Floors</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Floors/Rooms</h1>
         <button onClick={() => { resetForm(); setShowForm(true) }} className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors">
-          + Add Floor
+          + Add Floor/Room
         </button>
       </div>
 
@@ -89,13 +89,13 @@ export default function OwnerFloors() {
       )}
 
       {floors.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">No floors yet. Add your first floor!</div>
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">No floors/rooms yet. Add your first floor!</div>
       ) : (
         <div className="grid gap-4">
           {floors.map(floor => (
-            <div key={floor.id} onClick={() => navigate(`/owner/floors/${floor.id}/seats`)} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+            <div key={floor.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Floor - {floor.name}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Room - {floor.name}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{floor.description}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{floor.seatCount} seat{floor.seatCount !== 1 ? 's' : ''}</p>
               </div>
@@ -120,9 +120,9 @@ export default function OwnerFloors() {
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => !deleting && setDeleteTarget(null)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Delete Floor</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Delete Floor/Room</h2>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-              Are you sure you want to delete floor- <strong className="text-gray-900 dark:text-white">{deleteTarget.name}</strong>?
+              Are you sure you want to delete floor/rooms- <strong className="text-gray-900 dark:text-white">{deleteTarget.name}</strong>?
             </p>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
               All <strong className="text-red-600 dark:text-red-400">{deleteTarget.seatCount} seat{deleteTarget.seatCount !== 1 ? 's' : ''}</strong> under this floor will also be permanently deleted.
@@ -141,7 +141,7 @@ export default function OwnerFloors() {
                 disabled={deleting}
                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium disabled:opacity-50 transition-colors"
               >
-                {deleting ? 'Deleting...' : 'Delete Floor'}
+                {deleting ? 'Deleting...' : 'Delete Floor/Room'}
               </button>
             </div>
           </div>
