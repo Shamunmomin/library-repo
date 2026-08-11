@@ -119,12 +119,25 @@ public class AdminService {
     }
 
     public List<Payment> getAllPayments(String status, String startDate, String endDate) {
-        if (status != null) {
-            return paymentRepository.findByStatusOrderByCreatedAtDesc(PaymentStatus.valueOf(status.toUpperCase()));
+        PaymentStatus paymentStatus = null;
+        if (status != null && !status.isBlank()) {
+            paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
         }
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
         if (startDate != null && endDate != null) {
-            LocalDateTime start = LocalDate.parse(startDate).atStartOfDay();
-            LocalDateTime end = LocalDate.parse(endDate).atTime(LocalTime.MAX);
+            start = LocalDate.parse(startDate).atStartOfDay();
+            end = LocalDate.parse(endDate).atTime(LocalTime.MAX);
+        }
+
+        if (paymentStatus != null && start != null && end != null) {
+            return paymentRepository.findByStatusAndPaymentDateBetweenOrderByPaymentDateDesc(paymentStatus, start, end);
+        }
+        if (paymentStatus != null) {
+            return paymentRepository.findByStatusOrderByCreatedAtDesc(paymentStatus);
+        }
+        if (start != null && end != null) {
             return paymentRepository.findByPaymentDateBetweenOrderByPaymentDateDesc(start, end);
         }
         return paymentRepository.findAllByOrderByCreatedAtDesc();

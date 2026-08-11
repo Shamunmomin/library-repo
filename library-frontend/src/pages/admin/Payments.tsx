@@ -28,7 +28,7 @@ export default function AdminPayments() {
   async function loadPayments() {
     setLoading(true)
     try {
-      const data = await adminService.getPayments(statusFilter || undefined)
+      const data = await adminService.getPayments(statusFilter || undefined, startDate, endDate)
       setPayments(data)
     } catch { toast.error('Failed to load payments') }
     finally { setLoading(false) }
