@@ -39,7 +39,7 @@ public class ReportService {
         checkProAccess(userId);
         User user = userService.getById(userId);
         Library library = libraryService.getLibraryByUser(user);
-        List<Member> members = memberRepository.findByLibraryAndArchivedFalseOrderByNameAsc(library);
+        List<Member> members = memberRepository.findByLibraryAndArchivedFalseAndJoinDateBetweenOrderByJoinDateAsc(library, startDate, endDate);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
@@ -172,7 +172,8 @@ public class ReportService {
             document.add(datePara);
             document.add(new Paragraph(" "));
 
-            List<Payment> payments = paymentRepository.findAllByOrderByCreatedAtDesc();
+            List<Payment> payments = paymentRepository.findByPaymentDateBetweenOrderByPaymentDateDesc(
+                    startDate.atStartOfDay(), endDate.atTime(java.time.LocalTime.MAX));
             PdfPTable table = new PdfPTable(6);
             table.setWidthPercentage(100);
             addTableHeader(table, "User Name","Phone", "Amount","Subscription", "Status", "Payment Date");

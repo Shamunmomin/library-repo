@@ -8,7 +8,7 @@ import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter  basename="/library-repo">
+    <BrowserRouter  >
       <ThemeProvider>
         <App />
         <Toaster

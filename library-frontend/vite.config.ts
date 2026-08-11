@@ -5,8 +5,8 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
-  
-  base: '/library-repo/',
+
+  // base: '/library-repo/',
 
   server: {
     port: 3000,

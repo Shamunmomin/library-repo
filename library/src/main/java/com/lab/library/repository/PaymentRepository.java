@@ -14,5 +14,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     List<Payment> findAllByOrderByCreatedAtDesc();
     List<Payment> findByStatusOrderByCreatedAtDesc(PaymentStatus status);
     List<Payment> findByPaymentDateBetweenOrderByPaymentDateDesc(LocalDateTime start, LocalDateTime end);
+    List<Payment> findByStatusAndPaymentDateBetweenOrderByPaymentDateDesc(PaymentStatus status, LocalDateTime start, LocalDateTime end);
     long countByStatus(PaymentStatus status);
 }
