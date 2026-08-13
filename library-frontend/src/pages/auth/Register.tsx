@@ -38,7 +38,7 @@ export default function Register() {
     if (!validate()) return
     try {
       await register(name.trim(), email.trim().toLowerCase(), password, phone.trim())
-      navigate(ROUTES.LOGIN)
+      navigate(ROUTES.SPLASH, { replace: true })
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       toast.error(msg || 'Registration failed. Please try again.')

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { OnboardingProvider } from './context/OnboardingContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthGuard } from './guard/AuthGuard'
+import { GuestGuard } from './guard/GuestGuard'
 import { OnboardingGuard } from './guard/OnboardingGuard'
 import { ROUTES } from './utils/constants'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -49,8 +50,22 @@ export default function App() {
             <BootstrapGate>
               <Routes>
                 <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
-                <Route path={ROUTES.LOGIN} element={<AuthLayout><Login /></AuthLayout>} />
-                <Route path={ROUTES.REGISTER} element={<AuthLayout><Register /></AuthLayout>} />
+                <Route
+                  path={ROUTES.LOGIN}
+                  element={
+                    <GuestGuard>
+                      <AuthLayout><Login /></AuthLayout>
+                    </GuestGuard>
+                  }
+                />
+                <Route
+                  path={ROUTES.REGISTER}
+                  element={
+                    <GuestGuard>
+                      <AuthLayout><Register /></AuthLayout>
+                    </GuestGuard>
+                  }
+                />
 
                 <Route
                   path={ROUTES.SPLASH}

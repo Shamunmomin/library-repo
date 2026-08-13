@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LibraryPro - Library Management SaaS</title>
+    <script>
+      (function () {
+        var redirect = sessionStorage.getItem('__spa_redirect')
+        if (redirect && redirect !== location.pathname + location.search + location.hash) {
+          sessionStorage.removeItem('__spa_redirect')
+          history.replaceState(null, '', redirect)
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
