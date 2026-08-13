@@ -41,6 +41,7 @@ public class SubscriptionService {
     private final SubscriptionEventService subscriptionEventService;
     private final SubscriptionExpiryPolicy expiryPolicy;
     private final SubscriptionProperties properties;
+    private final EmailService emailService;
 
     public SubscriptionPackage getUserActivePackage(UUID userId) {
         User user = userService.getById(userId);
@@ -81,6 +82,7 @@ public class SubscriptionService {
 
         SubscriptionResponse response = subscriptionMapper.toResponse(subscription);
         subscriptionEventService.notifyUser(user.getId(), response);
+        emailService.sendSubscriptionRequestMailTOOwner(user.getName(), packageType);
         return response;
     }
 

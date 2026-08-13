@@ -22,14 +22,14 @@ public class DataInitializer implements CommandLineRunner {
         if (!userRepository.existsByEmail("admin@library.com")) {
             User admin = User.builder()
                     .name("System Admin")
-                    .email("admin@library.com")
-                    .password(passwordEncoder.encode("admin123"))
+                    .email("samtech20070809@gmail.com")
+                    .password(passwordEncoder.encode("Sam17@dz"))
                     .phone("0000000000")
                     .role(Role.ADMIN)
                     .enabled(true)
                     .build();
             userRepository.save(admin);
-            log.info("Default admin created: admin@library.com / admin123");
+            log.info("Default admin created: samtech20070809@gmail.com / admin123");
         } else {
             log.info("Default admin already exists");
         }

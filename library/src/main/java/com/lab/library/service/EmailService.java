@@ -3,6 +3,7 @@ package com.lab.library.service;
 import com.lab.library.entity.Member;
 import com.lab.library.entity.Subscription;
 import com.lab.library.enums.NotificationType;
+import com.lab.library.enums.SubscriptionPackage;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Service
@@ -74,4 +78,29 @@ public class EmailService {
             log.error("Failed to send {} member-fee email for member {}: {}", type, member.getId(), e.getMessage());
         }
     }
+
+//    subscription apply reminder  notification to admin
+@Async("notificationExecutor")
+public void sendSubscriptionRequestMailTOOwner(String name, SubscriptionPackage subscriptionPackage) {
+    if (!mailEnabled) {
+        log.debug("Mail notifications disabled; skipping {} for subscription request {}", name,subscriptionPackage);
+        return;
+    }
+
+    String ownerEmail="samtech20070809@gmail.com";
+    String packageType=subscriptionPackage.name();
+
+    try {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setTo(ownerEmail);
+        helper.setSubject(name + ": " + "New subscription request received");
+        helper.setText(EmailTemplates.renderSubscriptionApplication(name,packageType,NotificationType.SUBSCRIPTION_REQUEST, LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),"https://shamunmomin.github.io/library-repo/login") ,true);
+        mailSender.send(message);
+        log.info("{} member-fee email sent to {}", subscriptionPackage, ownerEmail);
+    } catch (Exception e) {
+        log.error("Failed to send {} member-fee email for member {}: {}", ownerEmail, e.getMessage());
+    }
+}
+
 }

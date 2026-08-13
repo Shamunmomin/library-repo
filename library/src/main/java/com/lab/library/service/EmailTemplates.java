@@ -93,4 +93,68 @@ final class EmailTemplates {
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
+
+
+//    template for send subscription request to owner
+static String renderSubscriptionApplication(
+        String userName,
+        String subscriptionPackage,
+        NotificationType type,
+        String date,
+        String loginLink
+) {
+    String headline = "New Subscription Application";
+
+    String body = "A new subscription application has been submitted by "
+                  + "<strong>" + htmlEscape(userName) + "</strong> "
+                  + "for the <strong>" + htmlEscape(subscriptionPackage) + "</strong> package.";
+
+    return "<html><body style='font-family:Arial,sans-serif;background:#f7f7f7;padding:24px;'>"
+           + "<div style='max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px;'>"
+
+           + "<h2 style='margin-top:0;color:#111827;'>" + headline + "</h2>"
+
+           + "<p style='color:#374151;'>Hello,</p>"
+
+           + "<p style='color:#374151;'>" + body + "</p>"
+
+           + "<div style='background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0;'>"
+
+           + "<p style='margin:8px 0;color:#374151;'>"
+           + "<strong>User:</strong> " + htmlEscape(userName)
+           + "</p>"
+
+           + "<p style='margin:8px 0;color:#374151;'>"
+           + "<strong>Subscription Package:</strong> " + htmlEscape(subscriptionPackage)
+           + "</p>"
+
+           + "<p style='margin:8px 0;color:#374151;'>"
+           + "<strong>Notification Type:</strong> " + htmlEscape(type.name())
+           + "</p>"
+
+           + "<p style='margin:8px 0;color:#374151;'>"
+           + "<strong>Date:</strong> " + htmlEscape(date)
+           + "</p>"
+
+           + "</div>"
+
+           + "<p style='color:#374151;'>"
+           + "Please log in to your library management account to review this application."
+           + "</p>"
+
+           + "<div style='text-align:center;margin:28px 0;'>"
+           + "<a href='" + htmlEscape(loginLink) + "' "
+           + "style='display:inline-block;background:#2563eb;color:#ffffff;"
+           + "text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;'>"
+           + "Login to Review"
+           + "</a>"
+           + "</div>"
+
+           + "<p style='color:#6b7280;font-size:12px;margin-bottom:0;'>"
+           + "This is an automated notification from your library management system."
+           + "</p>"
+
+           + "</div></body></html>";
+}
+
 }
