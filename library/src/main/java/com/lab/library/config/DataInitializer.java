@@ -19,7 +19,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!userRepository.existsByEmail("admin@library.com")) {
+        if (!userRepository.existsByEmail("samtech20070809@gmail.com")) {
             User admin = User.builder()
                     .name("System Admin")
                     .email("samtech20070809@gmail.com")
