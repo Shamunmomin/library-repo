@@ -12,7 +12,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://library-repo-n2eu.onrender.com',
+        target: 'https://library-repo-1bcp.onrender.com',
         changeOrigin: true,
         secure: false,
       },
